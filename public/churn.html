@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Churn Analysis &#8211; Girish T</title>
+<meta name="description" content="Full case study: Customer Churn Analysis by Girish T. SQL, Power BI, DAX, Data Modelling.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E&#128202;%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--jet:#0A0A0A;--panel:#121216;--line:#26262d;--cer:#007BA7;--cer-t:#3DB8E8;--rose:#FF2A8A;--text:#EDEDF2;--mute:#9A9AA6;
+--d:'Bricolage Grotesque',system-ui,sans-serif;--b:'Hanken Grotesk',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--jet);color:var(--text);font:400 1.0625rem/1.7 var(--b);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 clamp(1.25rem,5vw,2.5rem)}
+h1,h2,h3,h4{font-family:var(--d);font-weight:800;line-height:1.05;letter-spacing:-.03em}
+h2{font-size:clamp(1.5rem,3.5vw,2.2rem);margin:2.8rem 0 .7rem;padding-top:2.8rem;border-top:1px solid var(--line)}
+h2:first-of-type{margin-top:0;padding-top:0;border-top:none}
+h3{font-size:1.15rem;margin:1.5rem 0 .4rem;color:var(--cer-t)}
+h4{font-size:.95rem;color:var(--mute);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:.9rem 0 .3rem}
+p{color:#C9C9D2;max-width:70ch;margin:.5rem 0;line-height:1.72}
+ul,ol{padding-left:1.2rem;color:#C9C9D2;max-width:70ch}
+li{margin:.4rem 0;line-height:1.65}
+/* Nav */
+nav{position:sticky;top:0;z-index:5;background:rgba(10,10,10,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:.9rem 0}
+nav .wrap{display:flex;align-items:center;gap:1rem}
+.back{display:inline-flex;align-items:center;gap:.4rem;color:var(--mute);font-size:.92rem;transition:color .2s}
+.back:hover{color:var(--text)}
+.back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-title{font:800 1rem var(--d);color:var(--mute);letter-spacing:-.02em}
+/* Hero */
+.case-hero{padding:3.5rem 0 2rem;border-bottom:1px solid var(--line)}
+.case-tools{color:var(--cer-t);font-size:.92rem;margin:.5rem 0 1.2rem}
+.case-hero h1{font-size:clamp(2rem,5vw,3.2rem);margin-bottom:.3rem}
+/* KPI strip */
+.kpi-strip{display:flex;gap:.75rem;flex-wrap:wrap;margin:1.5rem 0}
+.kpi-card{flex:1;min-width:130px;padding:.9rem 1.1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.kpi-card .kv{font:800 1.6rem/1 var(--d);letter-spacing:-.03em}
+.kpi-card .kv.rose{color:var(--rose)}
+.kpi-card .kv.blue{color:var(--cer-t)}
+.kpi-card .kl{font-size:.8rem;color:var(--mute);margin-top:.35rem}
+/* Content */
+.content{padding:2rem 0 4rem}
+/* Attribute table */
+table{width:100%;border-collapse:collapse;margin:1.2rem 0;font-size:.92rem}
+th{text-align:left;padding:.6rem .9rem;border-bottom:1px solid var(--line);color:var(--mute);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+td{padding:.55rem .9rem;border-bottom:1px solid rgba(38,38,45,.7);color:#C9C9D2;vertical-align:top}
+tr:last-child td{border-bottom:none}
+/* Geography comparison */
+.geo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:1.2rem 0}
+.geo-card{padding:.9rem 1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel);text-align:center}
+.geo-card .geo-val{font:800 1.8rem/1 var(--d);color:var(--rose);letter-spacing:-.03em}
+.geo-card .geo-label{font-size:.82rem;color:var(--mute);margin-top:.3rem}
+/* Product count table */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.65rem;margin:1.2rem 0}
+.prod-card{padding:.8rem 1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.prod-card .pc-num{font:800 .85rem var(--d);color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.prod-card .pc-val{font:800 1.5rem/1 var(--d);color:var(--rose);letter-spacing:-.03em;margin:.25rem 0}
+.prod-card .pc-label{font-size:.78rem;color:var(--mute)}
+/* Finding block */
+.finding{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--rose);background:var(--panel);border-radius:0 12px 12px 0;color:var(--text)}
+/* Info block */
+.info{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--cer);background:var(--panel);border-radius:0 12px 12px 0;color:var(--mute);font-size:.95rem}
+/* Code block */
+pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1.2rem 0;font-size:.87rem;line-height:1.6;color:#a8d8ea}
+code{font-family:'Courier New',Courier,monospace}
+/* Screenshot */
+.screenshot{width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:1.2rem 0;background:#000}
+.screenshot img{width:100%;height:auto;display:block;object-fit:contain}
+/* Buttons */
+.btns{display:flex;gap:.7rem;flex-wrap:wrap;margin:2rem 0}
+.btn{display:inline-block;padding:.7rem 1.3rem;border-radius:99px;font-weight:600;font-size:.95rem;border:1px solid var(--line);transition:transform .2s,background .2s}
+.btn:hover{transform:translateY(-2px);background:var(--panel)}
+.btn.p{background:var(--rose);border-color:var(--rose);color:#fff}
+/* Limitation */
+.limit{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;margin:1.2rem 0}
+.limit h4{color:var(--mute);margin-bottom:.5rem}
+.limit li{color:var(--mute);font-size:.93rem}
+/* Footer */
+footer{border-top:1px solid var(--line);padding:1.4rem 0;color:var(--mute);font-size:.88rem}
+@media(max-width:600px){
+  .kpi-strip,.geo-grid{gap:.5rem}
+  .kpi-card,.geo-card{min-width:calc(50% - .375rem)}
+  .geo-grid{grid-template-columns:1fr 1fr 1fr}
+  h2{font-size:1.4rem}
+  pre{font-size:.8rem}
+  table{font-size:.82rem}
+  th,td{padding:.45rem .6rem}
+}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="back" href="index.html">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-title">Case Study</span>
+</div></nav>
+
+<header class="case-hero"><div class="wrap">
+  <h1>Customer Churn Analysis</h1>
+  <p class="case-tools">SQL &middot; Power BI &middot; DAX &middot; Data Modelling</p>
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kv rose">20.37%</div><div class="kl">Overall Churn Rate</div></div>
+    <div class="kpi-card"><div class="kv blue">10,000</div><div class="kl">Total Customers</div></div>
+    <div class="kpi-card"><div class="kv rose">2,037</div><div class="kl">Customers Exited</div></div>
+    <div class="kpi-card"><div class="kv blue">7,963</div><div class="kl">Retained Customers</div></div>
+  </div>
+  <p class="info" style="margin:0">Published in Power BI Service</p>
+</div></header>
+
+<div class="content"><div class="wrap">
+
+  <!-- 1. Business Problem -->
+  <h2>1. Business Problem</h2>
+  <p>A bank wanted to understand which customer segments were most likely to close their accounts (churn). The goal was to identify patterns in customer demographics and behaviour that were associated with higher churn rates, so that the business could investigate targeted retention strategies for the highest-risk segments.</p>
+
+  <h3>Key Business Questions</h3>
+  <ul>
+    <li>What is the overall churn rate, and how does it vary by country?</li>
+    <li>Which age groups show the highest churn rates?</li>
+    <li>Does the number of products a customer holds affect their likelihood of churning?</li>
+    <li>How does activity status (active vs. inactive) relate to churn?</li>
+    <li>Are there month-over-month patterns in customer exits?</li>
+  </ul>
+
+  <!-- 2. Dataset Overview -->
+  <h2>2. Dataset Overview</h2>
+  <p>The dataset contains records for 10,000 bank customers across three countries: France, Germany, and Spain. Each record includes demographic information, account details, and a churn indicator.</p>
+
+  <table>
+    <thead>
+      <tr><th>Column</th><th>Description</th><th>Type</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CustomerID</td><td>Unique customer identifier</td><td>Integer</td></tr>
+      <tr><td>Surname</td><td>Customer surname (excluded from analysis)</td><td>Text</td></tr>
+      <tr><td>CreditScore</td><td>Customer credit score</td><td>Integer</td></tr>
+      <tr><td>Geography</td><td>Country: France, Germany, or Spain</td><td>Text</td></tr>
+      <tr><td>Gender</td><td>Male or Female</td><td>Text</td></tr>
+      <tr><td>Age</td><td>Customer age in years</td><td>Integer</td></tr>
+      <tr><td>Tenure</td><td>Years as a customer (0&#8211;10)</td><td>Integer</td></tr>
+      <tr><td>Balance</td><td>Account balance</td><td>Decimal</td></tr>
+      <tr><td>NumOfProducts</td><td>Number of bank products held (1&#8211;4)</td><td>Integer</td></tr>
+      <tr><td>HasCrCard</td><td>Whether the customer holds a credit card (0/1)</td><td>Binary</td></tr>
+      <tr><td>IsActiveMember</td><td>Whether the customer is an active member (0/1)</td><td>Binary</td></tr>
+      <tr><td>EstimatedSalary</td><td>Estimated annual salary</td><td>Decimal</td></tr>
+      <tr><td>Exited</td><td>Churn indicator: 1 = churned, 0 = retained</td><td>Binary</td></tr>
+    </tbody>
+  </table>
+
+  <div class="info">A customer is classified as churned (<code>Exited = 1</code>) if they closed their account during the observation period. This is a binary classification based on a point-in-time snapshot; the dataset does not record when exactly within the observation period the exit occurred.</div>
+
+  <!-- 3. Data Quality Checks -->
+  <h2>3. Data Quality Checks</h2>
+  <p>I profiled and validated the dataset in SQL before loading it into Power BI.</p>
+
+  <h3>Checks Performed</h3>
+  <ul>
+    <li>Checked for NULL values across all 14 columns &#8212; none found.</li>
+    <li>Verified CustomerID uniqueness: confirmed 10,000 unique customer records with no duplicates.</li>
+    <li>Validated <code>CreditScore</code> range: all values fell within the expected 300&#8211;850 band.</li>
+    <li>Validated <code>Age</code>: all values were between 18 and 92 (plausible for bank customers).</li>
+    <li>Checked <code>NumOfProducts</code>: values ranged from 1 to 4 as expected.</li>
+    <li>Verified <code>Geography</code>: only three values present &#8212; France, Germany, Spain.</li>
+    <li>Confirmed binary columns (<code>HasCrCard</code>, <code>IsActiveMember</code>, <code>Exited</code>) contained only 0 and 1 values.</li>
+  </ul>
+
+  <pre><code>-- Check for NULLs across all key columns
+SELECT
+    SUM(CASE WHEN CustomerID      IS NULL THEN 1 ELSE 0 END) AS null_customer,
+    SUM(CASE WHEN CreditScore     IS NULL THEN 1 ELSE 0 END) AS null_credit,
+    SUM(CASE WHEN Geography       IS NULL THEN 1 ELSE 0 END) AS null_geo,
+    SUM(CASE WHEN Age             IS NULL THEN 1 ELSE 0 END) AS null_age,
+    SUM(CASE WHEN NumOfProducts   IS NULL THEN 1 ELSE 0 END) AS null_products,
+    SUM(CASE WHEN Exited          IS NULL THEN 1 ELSE 0 END) AS null_exited
+FROM bank_customers;
+
+-- Validate CreditScore range
+SELECT
+    MIN(CreditScore) AS min_score,
+    MAX(CreditScore) AS max_score
+FROM bank_customers;
+-- Expected: min >= 300, max <= 850
+
+-- Check for duplicate CustomerIDs
+SELECT CustomerID, COUNT(*) AS cnt
+FROM bank_customers
+GROUP BY CustomerID
+HAVING COUNT(*) > 1;</code></pre>
+
+  <!-- 4. SQL Analysis -->
+  <h2>4. SQL Analysis</h2>
+  <p>I used SQL to calculate the core churn metrics and segment breakdowns that feed the Power BI report.</p>
+
+  <h3>Overall Churn Rate</h3>
+  <pre><code>SELECT
+    COUNT(*)                                          AS total_customers,
+    SUM(Exited)                                       AS churned_customers,
+    COUNT(*) - SUM(Exited)                            AS retained_customers,
+    ROUND(SUM(Exited) * 100.0 / COUNT(*), 2)         AS churn_rate_pct
+FROM bank_customers;</code></pre>
+
+  <h3>Churn by Geography</h3>
+  <pre><code>SELECT
+    Geography,
+    COUNT(*)                                          AS total_customers,
+    SUM(Exited)                                       AS churned,
+    ROUND(SUM(Exited) * 100.0 / COUNT(*), 2)         AS churn_rate_pct
+FROM bank_customers
+GROUP BY Geography
+ORDER BY churn_rate_pct DESC;</code></pre>
+
+  <h3>Churn by Number of Products</h3>
+  <pre><code>SELECT
+    NumOfProducts,
+    COUNT(*)                                          AS total_customers,
+    SUM(Exited)                                       AS churned,
+    ROUND(SUM(Exited) * 100.0 / COUNT(*), 2)         AS churn_rate_pct
+FROM bank_customers
+GROUP BY NumOfProducts
+ORDER BY NumOfProducts;</code></pre>
+
+  <h3>Churn by Age Group</h3>
+  <pre><code>SELECT
+    CASE
+        WHEN Age < 30               THEN 'Under 30'
+        WHEN Age BETWEEN 30 AND 44  THEN '30 to 44'
+        WHEN Age BETWEEN 45 AND 59  THEN '45 to 59'
+        ELSE '60 and above'
+    END AS age_group,
+    COUNT(*)                                          AS total_customers,
+    SUM(Exited)                                       AS churned,
+    ROUND(SUM(Exited) * 100.0 / COUNT(*), 2)         AS churn_rate_pct
+FROM bank_customers
+GROUP BY
+    CASE
+        WHEN Age < 30               THEN 'Under 30'
+        WHEN Age BETWEEN 30 AND 44  THEN '30 to 44'
+        WHEN Age BETWEEN 45 AND 59  THEN '45 to 59'
+        ELSE '60 and above'
+    END
+ORDER BY churn_rate_pct DESC;</code></pre>
+
+  <!-- 5. Data Model and Relationships -->
+  <h2>5. Data Model &amp; Relationships</h2>
+  <p>The dataset is a single flat table (<code>bank_customers</code>). In Power BI, I created a separate Date Table to enable time intelligence calculations and connected it to a derived date field.</p>
+
+  <div class="info">
+    <strong>Model structure:</strong><br>
+    bank_customers (fact) &#8594; Date Table (date dimension)<br>
+    Calculated columns were added for Age Group and Churn Label to support slicers and visual grouping.
+  </div>
+
+  <h3>Calculated Columns (Power BI)</h3>
+  <pre><code>-- Age group column
+Age Group =
+SWITCH(TRUE(),
+    bank_customers[Age] < 30,              "Under 30",
+    bank_customers[Age] < 45,              "30 to 44",
+    bank_customers[Age] < 60,              "45 to 59",
+                                           "60 and above"
+)
+
+-- Churn label
+Churn Status =
+IF(bank_customers[Exited] = 1, "Churned", "Retained")</code></pre>
+
+  <!-- 6. KPI Definitions -->
+  <h2>6. KPI Definitions</h2>
+  <p>All KPIs were defined as DAX measures for consistency across the dashboard.</p>
+
+  <pre><code>Total Customers = COUNTROWS(bank_customers)
+
+Churned Customers = CALCULATE([Total Customers], bank_customers[Exited] = 1)
+
+Retained Customers = CALCULATE([Total Customers], bank_customers[Exited] = 0)
+
+Churn Rate % = DIVIDE([Churned Customers], [Total Customers], 0)
+
+Active Customers = CALCULATE([Total Customers], bank_customers[IsActiveMember] = 1)
+
+Inactive Customers = CALCULATE([Total Customers], bank_customers[IsActiveMember] = 0)</code></pre>
+
+  <!-- 7. Dashboard Screenshots -->
+  <h2>7. Dashboard Screenshots</h2>
+  <div class="screenshot"><img src="img/churn1.jpg" alt="Churn dashboard overview" loading="lazy"></div>
+  <div class="screenshot"><img src="img/churn2.jpg" alt="Churn rate by geography" loading="lazy"></div>
+  <div class="screenshot"><img src="img/churn3.jpg" alt="Churn by number of products" loading="lazy"></div>
+
+  <!-- 8. Key Findings -->
+  <h2>8. Key Findings</h2>
+
+  <div class="finding">
+    These findings describe observed patterns in the dataset. They do not establish causation. The dataset is a point-in-time snapshot and may not reflect current or future churn behaviour.
+  </div>
+
+  <h3>Overall Churn</h3>
+  <p>2,037 of the 10,000 customers in the dataset had churned, giving an overall churn rate of 20.37%.</p>
+
+  <h3>Churn by Geography</h3>
+  <div class="geo-grid">
+    <div class="geo-card"><div class="geo-val">32.4%</div><div class="geo-label">Germany</div></div>
+    <div class="geo-card"><div class="geo-val">~16%</div><div class="geo-label">France</div></div>
+    <div class="geo-card"><div class="geo-val">~16%</div><div class="geo-label">Spain</div></div>
+  </div>
+  <p>Germany recorded a notably higher churn rate than France and Spain in the analysed dataset. Germany also had a smaller customer base than France, which may contribute to the higher percentage.</p>
+
+  <h3>Churn by Number of Products</h3>
+  <div class="prod-grid">
+    <div class="prod-card"><div class="pc-num">1 Product</div><div class="pc-val">~28%</div><div class="pc-label">Churn Rate</div></div>
+    <div class="prod-card"><div class="pc-num">2 Products</div><div class="pc-val">~8%</div><div class="pc-label">Churn Rate</div></div>
+    <div class="prod-card"><div class="pc-num">3 Products</div><div class="pc-val">&gt;80%</div><div class="pc-label">Churn Rate</div></div>
+    <div class="prod-card"><div class="pc-num">4 Products</div><div class="pc-val">&gt;80%</div><div class="pc-label">Churn Rate</div></div>
+  </div>
+  <p>Customers holding three or four products showed a disproportionately high churn rate (&gt;80%). However, these groups represent a much smaller share of the total customer base than the one- and two-product groups. The pattern is unusual and may reflect specific product or service issues that warrant further investigation.</p>
+
+  <h3>Activity Status and Churn</h3>
+  <p>Inactive members showed a higher churn rate than active members in the dataset. This pattern is consistent with the expectation that customers who are not actively using their accounts may be more likely to close them.</p>
+
+  <h3>November Exit Peak</h3>
+  <p>November recorded the highest number of customer exits (307) in the analysed period. This is a descriptive observation; the dataset does not provide enough information to explain why exits were higher in November.</p>
+
+  <!-- 9. Observations and Recommendations -->
+  <h2>9. Observations &amp; Next Steps</h2>
+  <p>The following observations are based on the analysis and represent areas the business could investigate further.</p>
+
+  <ul>
+    <li>The higher churn rate in Germany could justify a country-specific investigation into product satisfaction, pricing, or competitive factors in the German market.</li>
+    <li>The very high churn rate among customers holding three or four products is counterintuitive and should be examined closely. It may indicate that customers who hold more products are experiencing friction or dissatisfaction that the data alone cannot explain.</li>
+    <li>Inactive members as a segment could be a priority for re-engagement campaigns, given their higher observed churn rate.</li>
+    <li>A month-over-month tracking dashboard could help the business monitor whether retention strategies are having an effect over time.</li>
+    <li>Further analysis could incorporate qualitative data (such as customer complaints or support interactions) to help explain the patterns observed here.</li>
+  </ul>
+
+  <!-- 10. Repository and Limitations -->
+  <h2>10. Project Limitations</h2>
+
+  <div class="btns">
+    <a class="btn" href="index.html">Back to Portfolio</a>
+  </div>
+  <p class="info" style="margin-bottom:1rem">This project was published in Power BI Service. A GitHub repository link is not available for this project.</p>
+
+  <div class="limit">
+    <h4>Project Limitations</h4>
+    <ul>
+      <li>The dataset is a publicly available simulated banking dataset. It may not reflect the complexity or nuance of real bank customer data.</li>
+      <li>The dataset is a point-in-time snapshot; it does not include when within the observation period each customer exited.</li>
+      <li>Churn is defined purely as <code>Exited = 1</code>. The dataset does not record why customers left.</li>
+      <li>The analysis identifies correlations between customer attributes and churn, but does not establish causation.</li>
+      <li>Findings for customers holding 3&#8211;4 products are based on smaller sub-groups and should be interpreted with caution.</li>
+      <li>No predictive model was built. This is a descriptive analysis only.</li>
+    </ul>
+  </div>
+
+</div></div>
+
+<footer><div class="wrap">&#169; 2026 Girish T &middot; Bangalore, India</div></footer>
+
+</body>
+</html>

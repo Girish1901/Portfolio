@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-commerce Revenue &amp; Profitability Analytics &#8211; Girish T</title>
+<meta name="description" content="Full case study: E-commerce Revenue and Profitability Analytics by Girish T. SQL, Power BI, DAX, Data Modelling.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E&#128202;%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--jet:#0A0A0A;--panel:#121216;--line:#26262d;--cer:#007BA7;--cer-t:#3DB8E8;--rose:#FF2A8A;--text:#EDEDF2;--mute:#9A9AA6;
+--d:'Bricolage Grotesque',system-ui,sans-serif;--b:'Hanken Grotesk',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--jet);color:var(--text);font:400 1.0625rem/1.7 var(--b);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 clamp(1.25rem,5vw,2.5rem)}
+h1,h2,h3,h4{font-family:var(--d);font-weight:800;line-height:1.05;letter-spacing:-.03em}
+h2{font-size:clamp(1.5rem,3.5vw,2.2rem);margin:2.8rem 0 .7rem;padding-top:2.8rem;border-top:1px solid var(--line)}
+h2:first-of-type{margin-top:0;padding-top:0;border-top:none}
+h3{font-size:1.15rem;margin:1.5rem 0 .4rem;color:var(--cer-t)}
+h4{font-size:.95rem;color:var(--mute);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:.9rem 0 .3rem}
+p{color:#C9C9D2;max-width:70ch;margin:.5rem 0;line-height:1.72}
+ul,ol{padding-left:1.2rem;color:#C9C9D2;max-width:70ch}
+li{margin:.4rem 0;line-height:1.65}
+/* Nav */
+nav{position:sticky;top:0;z-index:5;background:rgba(10,10,10,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:.9rem 0}
+nav .wrap{display:flex;align-items:center;gap:1rem}
+.back{display:inline-flex;align-items:center;gap:.4rem;color:var(--mute);font-size:.92rem;transition:color .2s}
+.back:hover{color:var(--text)}
+.back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-title{font:800 1rem var(--d);color:var(--mute);letter-spacing:-.02em}
+/* Hero */
+.case-hero{padding:3.5rem 0 2rem;border-bottom:1px solid var(--line)}
+.case-tools{color:var(--cer-t);font-size:.92rem;margin:.5rem 0 1.2rem}
+.case-hero h1{font-size:clamp(2rem,5vw,3.2rem);margin-bottom:.3rem}
+/* KPI strip */
+.kpi-strip{display:flex;gap:.75rem;flex-wrap:wrap;margin:1.5rem 0}
+.kpi-card{flex:1;min-width:130px;padding:.9rem 1.1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.kpi-card .kv{font:800 1.6rem/1 var(--d);color:var(--cer-t);letter-spacing:-.03em}
+.kpi-card .kl{font-size:.8rem;color:var(--mute);margin-top:.35rem}
+/* Content */
+.content{padding:2rem 0 4rem}
+/* Data model */
+.model{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;margin:1.2rem 0}
+.tbl{padding:.75rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.tbl-name{font:700 .95rem var(--d);color:var(--cer-t);letter-spacing:-.02em}
+.tbl-cols{font-size:.8rem;color:var(--mute);margin-top:.3rem;line-height:1.5}
+/* Finding block */
+.finding{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--rose);background:var(--panel);border-radius:0 12px 12px 0;color:var(--text)}
+/* Info block */
+.info{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--cer);background:var(--panel);border-radius:0 12px 12px 0;color:var(--mute);font-size:.95rem}
+/* Code block */
+pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1.2rem 0;font-size:.87rem;line-height:1.6;color:#a8d8ea}
+code{font-family:'Courier New',Courier,monospace}
+/* Screenshot */
+.screenshot{width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:1.2rem 0;background:#000}
+.screenshot img{width:100%;height:auto;display:block;object-fit:contain}
+/* Buttons */
+.btns{display:flex;gap:.7rem;flex-wrap:wrap;margin:2rem 0}
+.btn{display:inline-block;padding:.7rem 1.3rem;border-radius:99px;font-weight:600;font-size:.95rem;border:1px solid var(--line);transition:transform .2s,background .2s}
+.btn:hover{transform:translateY(-2px);background:var(--panel)}
+.btn.p{background:var(--rose);border-color:var(--rose);color:#fff}
+/* Limitation */
+.limit{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem;margin:1.2rem 0}
+.limit h4{color:var(--mute);margin-bottom:.5rem}
+.limit li{color:var(--mute);font-size:.93rem}
+/* Footer */
+footer{border-top:1px solid var(--line);padding:1.4rem 0;color:var(--mute);font-size:.88rem}
+@media(max-width:600px){
+  .kpi-strip{gap:.5rem}
+  .kpi-card{min-width:calc(50% - .375rem)}
+  h2{font-size:1.4rem}
+  pre{font-size:.8rem}
+  .model{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="back" href="index.html">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-title">Case Study</span>
+</div></nav>
+
+<header class="case-hero"><div class="wrap">
+  <h1>E-commerce Revenue &amp; Profitability Analytics</h1>
+  <p class="case-tools">SQL &middot; Power BI &middot; DAX &middot; Data Modelling</p>
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kv">&#8377;158.8M</div><div class="kl">Net Sales</div></div>
+    <div class="kpi-card"><div class="kv">23.39%</div><div class="kl">Profit Margin</div></div>
+    <div class="kpi-card"><div class="kv">0.57%</div><div class="kl">Return Rate</div></div>
+    <div class="kpi-card"><div class="kv">367K+</div><div class="kl">Order Items</div></div>
+    <div class="kpi-card"><div class="kv">25,000</div><div class="kl">Customers</div></div>
+  </div>
+  <div class="btns">
+    <a class="btn p" href="https://github.com/Girish1901/ecommerce-revenue-profitability-analytics" target="_blank" rel="noopener">View GitHub Repository</a>
+  </div>
+</div></header>
+
+<div class="content"><div class="wrap">
+
+  <!-- 1. Business Problem -->
+  <h2>1. Business Problem</h2>
+  <p>An e-commerce business wanted to understand how revenue, discounts, returns, products, and customer behaviour affect overall sales performance and profitability. The business needed a way to monitor monthly trends, identify profitable product categories, understand customer segments, and track sales executive performance&#8212;all in one place.</p>
+
+  <h3>Key Business Questions</h3>
+  <ul>
+    <li>Which products and categories generate the most revenue and profit?</li>
+    <li>How do discounts and returns affect overall profitability?</li>
+    <li>How does revenue performance change month over month?</li>
+    <li>Which customers and sales executives contribute most to performance?</li>
+    <li>How are customers distributed across RFM (Recency, Frequency, Monetary) segments?</li>
+  </ul>
+
+  <!-- 2. Dataset Overview -->
+  <h2>2. Dataset Overview</h2>
+  <p>The dataset contains transactional data from an e-commerce platform, spread across multiple related tables covering orders, products, customers, payments, and returns.</p>
+
+  <div class="model">
+    <div class="tbl">
+      <div class="tbl-name">orders</div>
+      <div class="tbl-cols">order_id, customer_id, order_date, sales_executive_id, status</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">order_items</div>
+      <div class="tbl-cols">item_id, order_id, product_id, quantity, unit_price, discount</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">customers</div>
+      <div class="tbl-cols">customer_id, name, city, region, segment</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">products</div>
+      <div class="tbl-cols">product_id, product_name, category_id, cost_price</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">product_categories</div>
+      <div class="tbl-cols">category_id, category_name</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">payments</div>
+      <div class="tbl-cols">payment_id, order_id, amount, payment_method, payment_date</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">returns</div>
+      <div class="tbl-cols">return_id, order_id, item_id, return_date, return_value</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">sales_executives</div>
+      <div class="tbl-cols">exec_id, name, region</div>
+    </div>
+  </div>
+
+  <div class="info">The data model follows a star schema structure. The <strong>order_items</strong> table acts as the central fact table. All dimension tables (customers, products, sales_executives) connect to it directly or through orders.</div>
+
+  <!-- 3. Data Quality Checks -->
+  <h2>3. Data Quality Checks</h2>
+  <p>Before building the Power BI report, I profiled and validated all source tables in SQL to ensure data integrity.</p>
+
+  <h3>Checks Performed</h3>
+  <ul>
+    <li>Verified row counts across all tables and confirmed no unexpected duplicates on primary keys.</li>
+    <li>Checked for NULL values in critical columns: <code>order_id</code>, <code>customer_id</code>, <code>product_id</code>, <code>unit_price</code>, and <code>order_date</code>.</li>
+    <li>Validated that discount values fell within the expected 0&#8211;1 range.</li>
+    <li>Confirmed all <code>order_id</code> values in <code>order_items</code> existed in the <code>orders</code> table (referential integrity).</li>
+    <li>Identified and reviewed orders with zero or negative net sales values.</li>
+    <li>Checked return records for orphaned entries (returns without matching order items).</li>
+    <li>Profiled 367,000+ order items across transaction, payment, and return tables before reporting.</li>
+  </ul>
+
+  <pre><code>-- Check for NULLs in critical columns
+SELECT
+    SUM(CASE WHEN order_id IS NULL THEN 1 ELSE 0 END)    AS null_order_id,
+    SUM(CASE WHEN customer_id IS NULL THEN 1 ELSE 0 END) AS null_customer_id,
+    SUM(CASE WHEN product_id IS NULL THEN 1 ELSE 0 END)  AS null_product_id,
+    SUM(CASE WHEN unit_price IS NULL THEN 1 ELSE 0 END)  AS null_unit_price
+FROM order_items;
+
+-- Validate discount range
+SELECT COUNT(*) AS out_of_range_discounts
+FROM order_items
+WHERE discount < 0 OR discount > 1;</code></pre>
+
+  <!-- 4. SQL Analysis -->
+  <h2>4. SQL Analysis</h2>
+  <p>I used SQL to build the core business metrics that feed the Power BI report. CTEs were used to keep queries readable and maintainable.</p>
+
+  <h3>Revenue Calculation</h3>
+  <pre><code>-- Core revenue metrics using CTE
+WITH revenue AS (
+    SELECT
+        oi.order_id,
+        o.order_date,
+        o.customer_id,
+        p.category_id,
+        oi.quantity * oi.unit_price                         AS gross_sales,
+        oi.quantity * oi.unit_price * oi.discount           AS discount_amount,
+        oi.quantity * oi.unit_price * (1 - oi.discount)    AS net_sales,
+        oi.quantity * p.cost_price                         AS cost_of_goods
+    FROM order_items oi
+    JOIN orders      o  ON oi.order_id   = o.order_id
+    JOIN products    p  ON oi.product_id = p.product_id
+)
+SELECT
+    YEAR(order_date)  AS yr,
+    MONTH(order_date) AS mth,
+    SUM(gross_sales)  AS gross_sales,
+    SUM(discount_amount) AS total_discounts,
+    SUM(net_sales)    AS net_sales,
+    SUM(net_sales - cost_of_goods) AS gross_profit,
+    ROUND(SUM(net_sales - cost_of_goods) / NULLIF(SUM(net_sales),0) * 100, 2) AS profit_margin_pct
+FROM revenue
+GROUP BY YEAR(order_date), MONTH(order_date)
+ORDER BY yr, mth;</code></pre>
+
+  <h3>Month-over-Month Revenue Growth</h3>
+  <pre><code>-- Month-over-month comparison using window function
+WITH monthly AS (
+    SELECT
+        YEAR(o.order_date)  AS yr,
+        MONTH(o.order_date) AS mth,
+        SUM(oi.quantity * oi.unit_price * (1 - oi.discount)) AS net_sales
+    FROM order_items oi
+    JOIN orders o ON oi.order_id = o.order_id
+    GROUP BY YEAR(o.order_date), MONTH(o.order_date)
+)
+SELECT
+    yr, mth, net_sales,
+    LAG(net_sales) OVER (ORDER BY yr, mth) AS prev_month_sales,
+    ROUND((net_sales - LAG(net_sales) OVER (ORDER BY yr, mth))
+          / NULLIF(LAG(net_sales) OVER (ORDER BY yr, mth),0) * 100, 2) AS mom_growth_pct
+FROM monthly;</code></pre>
+
+  <h3>RFM Customer Segmentation</h3>
+  <pre><code>-- RFM scoring
+WITH rfm_base AS (
+    SELECT
+        o.customer_id,
+        DATEDIFF(DAY, MAX(o.order_date), GETDATE())           AS recency_days,
+        COUNT(DISTINCT o.order_id)                            AS frequency,
+        SUM(oi.quantity * oi.unit_price * (1 - oi.discount)) AS monetary
+    FROM orders o
+    JOIN order_items oi ON o.order_id = oi.order_id
+    GROUP BY o.customer_id
+),
+rfm_scored AS (
+    SELECT *,
+        NTILE(5) OVER (ORDER BY recency_days ASC)  AS r_score,
+        NTILE(5) OVER (ORDER BY frequency    DESC) AS f_score,
+        NTILE(5) OVER (ORDER BY monetary     DESC) AS m_score
+    FROM rfm_base
+)
+SELECT customer_id, r_score, f_score, m_score,
+    r_score + f_score + m_score AS total_score,
+    CASE
+        WHEN r_score >= 4 AND f_score >= 4 THEN 'Champions'
+        WHEN r_score >= 3 AND f_score >= 3 THEN 'Loyal Customers'
+        WHEN r_score >= 3                  THEN 'Potential Loyalists'
+        WHEN r_score <= 2 AND f_score <= 2 THEN 'At Risk'
+        ELSE 'Others'
+    END AS rfm_segment
+FROM rfm_scored;</code></pre>
+
+  <!-- 5. Data Model and Relationships -->
+  <h2>5. Data Model &amp; Relationships</h2>
+  <p>The Power BI report uses a star schema. The fact table (<strong>order_items</strong>) sits at the centre with dimension tables connected via foreign keys. A separate date table was created in Power BI to enable time intelligence functions.</p>
+
+  <div class="info">
+    <strong>Relationships:</strong><br>
+    order_items &#8594; orders (order_id)<br>
+    orders &#8594; customers (customer_id)<br>
+    orders &#8594; sales_executives (exec_id)<br>
+    order_items &#8594; products (product_id)<br>
+    products &#8594; product_categories (category_id)<br>
+    orders &#8594; payments (order_id)<br>
+    order_items &#8594; returns (item_id)<br>
+    All tables &#8594; Date Table (date)
+  </div>
+
+  <!-- 6. KPI Definitions -->
+  <h2>6. KPI Definitions</h2>
+  <p>All KPIs were defined as DAX measures in Power BI for consistency across all report pages.</p>
+
+  <h3>Core Measures</h3>
+  <ul>
+    <li><strong>Gross Sales</strong> = SUM(Quantity &times; Unit Price)</li>
+    <li><strong>Discount Amount</strong> = SUM(Quantity &times; Unit Price &times; Discount)</li>
+    <li><strong>Net Sales</strong> = Gross Sales &#8722; Discount Amount</li>
+    <li><strong>Return Value</strong> = SUM(returns[return_value])</li>
+    <li><strong>Net Revenue</strong> = Net Sales &#8722; Return Value</li>
+    <li><strong>Gross Profit</strong> = Net Sales &#8722; Cost of Goods Sold</li>
+    <li><strong>Profit Margin %</strong> = DIVIDE(Gross Profit, Net Sales)</li>
+    <li><strong>Return Rate %</strong> = DIVIDE(Return Value, Gross Sales)</li>
+  </ul>
+
+  <pre><code>-- Example DAX measure
+Net Sales =
+SUMX(
+    order_items,
+    order_items[quantity] * order_items[unit_price] * (1 - order_items[discount])
+)
+
+Profit Margin % =
+DIVIDE([Gross Profit], [Net Sales], 0)</code></pre>
+
+  <!-- 7. Dashboard Screenshots -->
+  <h2>7. Dashboard Screenshots</h2>
+  <div class="screenshot"><img src="img/ecom1.jpg" alt="Executive overview dashboard" loading="lazy"></div>
+  <div class="screenshot"><img src="img/ecom2.jpg" alt="Profitability and category dashboard" loading="lazy"></div>
+  <div class="screenshot"><img src="img/ecom3.jpg" alt="Customer and geography dashboard" loading="lazy"></div>
+
+  <!-- 8. Key Findings -->
+  <h2>8. Key Findings</h2>
+
+  <div class="finding">
+    These findings describe observed patterns in the dataset. They do not establish causation.
+  </div>
+
+  <ul>
+    <li>Net Sales totalled approximately &#8377;158.8M across 150,000 orders and 25,000 customers.</li>
+    <li>Grocery was the leading category by net sales at &#8377;19.5M.</li>
+    <li>Overall profit margin held at 23.39% across the analysed period.</li>
+    <li>Return rate remained low at 0.57% of gross sales.</li>
+    <li>Approximately 49% of customers fell into the &#8220;At Risk&#8221; RFM segment, suggesting a significant portion of the customer base had not purchased recently.</li>
+    <li>Monthly revenue showed variation across the period, with certain months recording higher growth rates than others.</li>
+  </ul>
+
+  <!-- 9. Recommendations -->
+  <h2>9. Observations &amp; Next Steps</h2>
+  <p>The following observations are based on the analysis and represent areas that the business could investigate further. They are not prescriptive recommendations.</p>
+
+  <ul>
+    <li>The high proportion of At Risk customers (49%) suggests customer retention could be an area worth investigating, particularly re-engagement campaigns for customers who have not purchased in recent months.</li>
+    <li>The low return rate (0.57%) suggests return management is not currently a major issue, though tracking it over time could identify category-level concerns early.</li>
+    <li>Profit margin analysis by category could identify which categories are most and least profitable, enabling more informed decisions about product mix and discount strategy.</li>
+    <li>Sales executive performance data could be used to understand regional differences and identify coaching opportunities.</li>
+  </ul>
+
+  <!-- 10. Repository and Limitations -->
+  <h2>10. GitHub Repository &amp; Limitations</h2>
+
+  <div class="btns">
+    <a class="btn p" href="https://github.com/Girish1901/ecommerce-revenue-profitability-analytics" target="_blank" rel="noopener">View GitHub Repository</a>
+    <a class="btn" href="index.html">Back to Portfolio</a>
+  </div>
+
+  <div class="limit">
+    <h4>Project Limitations</h4>
+    <ul>
+      <li>The dataset is a simulated e-commerce dataset and may not reflect the complexity of real-world transactional data.</li>
+      <li>RFM segmentation uses fixed score thresholds. Different thresholds would produce different segments.</li>
+      <li>Profit margin calculations depend on cost_price values in the dataset; if those values are approximate, margins will be approximate.</li>
+      <li>The analysis does not account for seasonality or external market factors that might explain revenue trends.</li>
+      <li>Geographic analysis is limited to customer registration data, which may not reflect where purchases were actually made.</li>
+    </ul>
+  </div>
+
+</div></div>
+
+<footer><div class="wrap">&#169; 2026 Girish T &middot; Bangalore, India</div></footer>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+{ "rewrites": [ { "source": "/health", "destination": "/api/health" }, { "source": "/healthz", "destination": "/api/health" } ] }

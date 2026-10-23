@@ -1,0 +1,10 @@
+# Free backup pinger. Add repo variable SITE_URL (e.g. https://girish.vercel.app) in Settings > Variables.
+name: keepalive
+on:
+  schedule: [{ cron: '*/10 * * * *' }]
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS --retry 3 --max-time 30 "${{ vars.SITE_URL }}/health"
