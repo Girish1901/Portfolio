@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adidas Sales Analytics Case Study &#8211; Girish T</title>
+<meta name="description" content="Full case study: Adidas Sales Analytics by Girish T. Power BI, DAX, Star Schema, Commercial Reporting.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E&#128202;%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--jet:#0A0A0A;--panel:#121216;--line:#26262d;--cer:#007BA7;--cer-t:#3DB8E8;--rose:#FF2A8A;--text:#EDEDF2;--mute:#9A9AA6;
+--d:'Bricolage Grotesque',system-ui,sans-serif;--b:'Hanken Grotesk',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--jet);color:var(--text);font:400 1.0625rem/1.7 var(--b);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 clamp(1.25rem,5vw,2.5rem)}
+h1,h2,h3,h4{font-family:var(--d);font-weight:800;line-height:1.05;letter-spacing:-.03em}
+h2{font-size:clamp(1.5rem,3.5vw,2.2rem);margin:2.8rem 0 .7rem;padding-top:2.8rem;border-top:1px solid var(--line)}
+h2:first-of-type{margin-top:0;padding-top:0;border-top:none}
+h3{font-size:1.15rem;margin:1.5rem 0 .4rem;color:var(--cer-t)}
+h4{font-size:.95rem;color:var(--mute);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:.9rem 0 .3rem}
+p{color:#C9C9D2;max-width:70ch;margin:.5rem 0;line-height:1.72}
+ul,ol{padding-left:1.2rem;color:#C9C9D2;max-width:70ch}
+li{margin:.4rem 0;line-height:1.65}
+nav{position:sticky;top:0;z-index:5;background:rgba(10,10,10,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:.9rem 0}
+nav .wrap{display:flex;align-items:center;gap:1rem}
+.back{display:inline-flex;align-items:center;gap:.4rem;color:var(--mute);font-size:.92rem;transition:color .2s}
+.back:hover{color:var(--text)}
+.back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-title{font:800 1rem var(--d);color:var(--mute);letter-spacing:-.02em}
+.case-hero{padding:3.5rem 0 2rem;border-bottom:1px solid var(--line)}
+.case-tools{color:var(--cer-t);font-size:.92rem;margin:.5rem 0 1.2rem}
+.case-hero h1{font-size:clamp(2rem,5vw,3.2rem);margin-bottom:.3rem}
+.kpi-strip{display:flex;gap:.75rem;flex-wrap:wrap;margin:1.5rem 0}
+.kpi-card{flex:1;min-width:130px;padding:.9rem 1.1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.kpi-card .kv{font:800 1.6rem/1 var(--d);color:var(--cer-t);letter-spacing:-.03em}
+.kpi-card .kl{font-size:.8rem;color:var(--mute);margin-top:.35rem}
+.content{padding:2rem 0 4rem}
+.model{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;margin:1.2rem 0}
+.tbl{padding:.75rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.tbl-name{font:700 .95rem var(--d);color:var(--cer-t);letter-spacing:-.02em}
+.tbl-cols{font-size:.8rem;color:var(--mute);margin-top:.3rem;line-height:1.5}
+.finding{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--rose);background:var(--panel);border-radius:0 12px 12px 0;color:var(--text)}
+.info{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--cer);background:var(--panel);border-radius:0 12px 12px 0;color:var(--mute);font-size:.95rem}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1.2rem 0;font-size:.87rem;line-height:1.6;color:#a8d8ea}
+code{font-family:'Courier New',Courier,monospace}
+.screenshot{width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:1.2rem 0;background:#000}
+.screenshot img{width:100%;height:auto;display:block;object-fit:contain}
+.btns{display:flex;gap:.7rem;flex-wrap:wrap;margin:2rem 0}
+.btn{display:inline-block;padding:.7rem 1.3rem;border-radius:99px;font-weight:600;font-size:.95rem;border:1px solid var(--line);transition:transform .2s,background .2s}
+.btn:hover{transform:translateY(-2px);background:var(--panel)}
+.btn.p{background:var(--rose);border-color:var(--rose);color:#fff}
+footer{border-top:1px solid var(--line);padding:1.4rem 0;color:var(--mute);font-size:.88rem}
+@media(max-width:600px){
+  .kpi-strip{gap:.5rem}
+  .kpi-card{min-width:calc(50% - .375rem)}
+  h2{font-size:1.4rem}
+  pre{font-size:.8rem}
+  .model{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="back" href="index.html">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-title">Case Study</span>
+</div></nav>
+
+<header class="case-hero"><div class="wrap">
+  <h1>Adidas Sales &amp; Margin Analytics</h1>
+  <p class="case-tools">Power BI &middot; DAX &middot; Data Visualisation &middot; Star Schema</p>
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kv">$899.9M</div><div class="kl">Total Revenue</div></div>
+    <div class="kpi-card"><div class="kv">$332.1M</div><div class="kl">Operating Profit</div></div>
+    <div class="kpi-card"><div class="kv">42.3%</div><div class="kl">Avg Margin</div></div>
+    <div class="kpi-card"><div class="kv">24.8M</div><div class="kl">Units Sold</div></div>
+    <div class="kpi-card"><div class="kv">6</div><div class="kl">Major Retailers</div></div>
+  </div>
+  <div class="btns">
+    <a class="btn p" href="https://github.com/Girish1901/adidas-sales-analytics-powerbi" target="_blank" rel="noopener">View GitHub Repository</a>
+  </div>
+</div></header>
+
+<div class="content"><div class="wrap">
+
+  <h2>1. Business Problem</h2>
+  <p>Adidas sells footwear and apparel through major omnichannel retail partners across the United States. Commercial managers lacked a single consolidated view to compare retailer profitability, seasonal demand spikes, and product category margins across all US states.</p>
+
+  <h3>Key Business Questions</h3>
+  <ul>
+    <li>Which retail partners generate the highest operating profit vs top-line volume?</li>
+    <li>How does sales performance fluctuate between winter troughs and summer peaks?</li>
+    <li>What are the top-performing product categories by margin percentage?</li>
+    <li>Which states and sales methods (In-store, Outlet, Online) drive the most efficient margins?</li>
+  </ul>
+
+  <h2>2. Data Modelling &amp; Star Schema</h2>
+  <p>Built a robust star schema in Power BI with bidirectional relationships disabled to ensure unambiguous filter propagation.</p>
+
+  <div class="model">
+    <div class="tbl">
+      <div class="tbl-name">FactSales</div>
+      <div class="tbl-cols">SaleID, DateKey, ProductID, RetailerID, StateID, UnitsSold, TotalSales, OperatingProfit</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">DimProduct</div>
+      <div class="tbl-cols">ProductID, Category, GenderSegment, PricePerUnit</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">DimRetailer</div>
+      <div class="tbl-cols">RetailerID, RetailerName, SalesMethod</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">DimGeography</div>
+      <div class="tbl-cols">StateID, State, Region, City</div>
+    </div>
+    <div class="tbl">
+      <div class="tbl-name">DimDate</div>
+      <div class="tbl-cols">Date, Month, Quarter, Year, Season</div>
+    </div>
+  </div>
+
+  <h2>3. Key DAX Measures</h2>
+  <pre><code>// 1. Total Sales
+Total Sales = SUM(FactSales[TotalSales])
+
+// 2. Operating Profit
+Operating Profit = SUM(FactSales[OperatingProfit])
+
+// 3. Operating Profit Margin %
+Operating Margin % = 
+DIVIDE(
+    [Operating Profit], 
+    [Total Sales], 
+    0
+)
+
+// 4. Units Sold
+Total Units = SUM(FactSales[UnitsSold])
+
+// 5. Average Price per Unit
+Avg Selling Price = 
+DIVIDE([Total Sales], [Total Units], 0)</code></pre>
+
+  <h2>4. Core Insights &amp; Findings</h2>
+  <div class="finding">
+    <strong>Key Finding:</strong> West Gear emerged as the leading partner by total revenue ($242.9M). Peak monthly sales peaked in July ($95M) compared to a low in March ($57M). Footwear generated the highest volume, while Men's Apparel delivered the highest gross margin at 44.1%.
+  </div>
+
+  <div class="screenshot">
+    <img src="img/adidas1.jpg" alt="Adidas Sales Analytics Dashboard" loading="lazy">
+  </div>
+
+  <h2>5. Business Recommendations</h2>
+  <ul>
+    <li><strong>Channel Allocation:</strong> Reallocate higher promotional budgets to West Gear and Foot Locker in Q2 to capture summer footwear demand.</li>
+    <li><strong>Discount Control:</strong> Protect the 42.3% operating margin by curbing heavy discounting on Men's Street Footwear where demand inelasticity was observed.</li>
+    <li><strong>Regional Strategy:</strong> Expand outlet and online distribution channels in lagging Southeast regions.</li>
+  </ul>
+
+  <div class="btns">
+    <a class="btn p" href="index.html#work">Explore More Projects</a>
+    <a class="btn" href="https://github.com/Girish1901/adidas-sales-analytics-powerbi" target="_blank" rel="noopener">GitHub Repository</a>
+  </div>
+
+</div></div>
+
+<footer><div class="wrap">
+  <span>Girish T &middot; Data Analyst &middot; Bangalore, India</span>
+</div></footer>
+
+</body>
+</html>

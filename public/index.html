@@ -305,26 +305,35 @@ projects:[
  finding:'July recorded the highest monthly sales ($95M) against a March low ($57M). West Gear was the leading retailer. Profit Margin = (Revenue \u2212 Operating Cost) \u00f7 Revenue.',
  businessValue:'The dashboard helps users explore sales performance and identify areas for further commercial investigation.',
  images:[{src:'img/adidas1.jpg',alt:'Adidas sales analytics dashboard'}],
- github:'https://github.com/Girish1901/adidas-sales-analytics-powerbi',note:''},
+ github:'https://github.com/Girish1901/adidas-sales-analytics-powerbi',caseStudyUrl:'adidas.html',extraLinks:[{label:'View Full Case Study',url:'adidas.html',primary:true}],note:''},
 {title:'UPI Transaction Fraud Analysis',tools:'Python \u00b7 Pandas \u00b7 NumPy \u00b7 Matplotlib \u00b7 Seaborn',big:6.36,pre:'',suf:'M',dec:2,cap:'UPI transaction rows explored for fraud patterns',
  businessProblem:'Explore transaction patterns and identify transaction types and participants associated with higher observed fraud rates.',
  points:['Analysed approximately 6.36 million transaction records.','Created sender and receiver balance-related features.','Examined transaction counts and fraud rates by transaction type.','Ranked frequent senders and receivers by transaction count.','Used statistical summaries and visualisations to explore potentially risky patterns.'],
  finding:'Transfers showed the highest observed fraud rate at approximately 1.1%. Cash-outs at ~0.1%. Other transaction types were close to zero. Dataset: PaySim synthetic financial transaction data. This project uses exploratory data analysis \u2014 no prediction model was built.',
  businessValue:'The analysis provides an exploratory view of transaction patterns that could help guide further fraud investigation.',
  images:[{src:'img/upi1.jpg',alt:'Fraud rate by transaction type'},{src:'img/upi2.jpg',alt:'Transaction amount distribution'}],
- github:'https://github.com/Girish1901/UPI-Transaction-Fraud-Analysis-',note:''},
+ github:'https://github.com/Girish1901/UPI-Transaction-Fraud-Analysis-',caseStudyUrl:'upi.html',extraLinks:[{label:'View Full Case Study',url:'upi.html',primary:true}],note:''},
 {title:'Cinema Analytics',tools:'Python \u00b7 Pandas \u00b7 Matplotlib \u00b7 Seaborn',big:871,pre:'',suf:'',dec:0,cap:'movies kept after cleaning 1,000 IMDb titles',
  businessProblem:'Explore how movie revenue, genre, and audience ratings vary across the available dataset.',
  points:['Cleaned a dataset of approximately 1,000 IMDb titles (source: IMDb via Kaggle).','Handled missing values and duplicate records.','Converted revenue values to INR using the chosen conversion assumptions.','Analysed revenue by year and genre.','Explored rating distributions and correlations.'],
  finding:'Cleaned dataset: 871 records. Engagement tiers based on IMDb rating bands: High (\u22657.5)\u2009=\u2009185 titles, Medium (5.5\u20137.4)\u2009=\u2009676, Low (<5.5)\u2009=\u200910. Revenue patterns varied across years and genres.',
  businessValue:'The analysis demonstrates data cleaning, exploratory analysis, and visualisation techniques.',
  images:[{src:'img/cin1.jpg',alt:'Average revenue by year'},{src:'img/cin2.jpg',alt:'Top 10 genres by average revenue'},{src:'img/cin3.jpg',alt:'Engagement tier counts'}],
- github:'https://github.com/Girish1901/Movie-Analytics',note:''}],
+ github:'https://github.com/Girish1901/Movie-Analytics',caseStudyUrl:'cinema.html',extraLinks:[{label:'View Full Case Study',url:'cinema.html',primary:true}],note:''}],
 sections:[],
 contacts:[{label:'Email Me',url:'mailto:girish.t2004@gmail.com',primary:true},{label:'View Resume',url:'Girish_T_Resume.pdf'},{label:'LinkedIn',url:'https://www.linkedin.com/in/girish-t-417467283'},{label:'GitHub',url:'https://github.com/Girish1901'}]
 };
 
 let C=structuredClone(DEFAULT);
+try {
+  const cached = localStorage.getItem('portfolio_content');
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    if (parsed && typeof parsed === 'object') {
+      C = merge(parsed);
+    }
+  }
+} catch(e) {}
 
 /* merge: API can override profile/texts/hide/sections/projects/skills/contacts. */
 const merge=j=>{
@@ -452,7 +461,11 @@ function renderAll(){
 renderAll();
 
 /* Admin panel — window.PF fully active */
-window.PF={get:()=>C,set:c=>{C=c;renderAll()}};
+window.PF={get:()=>C,set:c=>{
+  C=c;
+  try{localStorage.setItem('portfolio_content',JSON.stringify(c))}catch(e){}
+  renderAll();
+}};
 
 /* Private entry: five quick clicks on the footer or copyright line */
 let ck=[];
@@ -474,6 +487,7 @@ function initFirebaseContent() {
         const m = merge(cloudData);
         if (JSON.stringify(m) !== JSON.stringify(C)) {
           C = m;
+          try{localStorage.setItem('portfolio_content',JSON.stringify(C))}catch(e){}
           renderAll();
         }
       }
@@ -487,7 +501,7 @@ initFirebaseContent();
 
 /* Fallback server /api/content fetch (if running via express/node) */
 fetch('/api/content',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
-  if(j&&Object.keys(j).length>0){const m=merge(j);if(JSON.stringify(m)!==JSON.stringify(C)){C=m;renderAll()}}
+  if(j&&Object.keys(j).length>0){const m=merge(j);if(JSON.stringify(m)!==JSON.stringify(C)){C=m;try{localStorage.setItem('portfolio_content',JSON.stringify(C))}catch(e){};renderAll()}}
 }).catch(()=>{});
 </script>
 <script type="module" src="firebase-config.js"></script>

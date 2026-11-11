@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UPI Transaction Fraud Analysis Case Study &#8211; Girish T</title>
+<meta name="description" content="Full case study: UPI Transaction Fraud Analysis by Girish T. Python, Pandas, Matplotlib, Seaborn, Exploratory Data Analysis.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E&#128202;%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--jet:#0A0A0A;--panel:#121216;--line:#26262d;--cer:#007BA7;--cer-t:#3DB8E8;--rose:#FF2A8A;--text:#EDEDF2;--mute:#9A9AA6;
+--d:'Bricolage Grotesque',system-ui,sans-serif;--b:'Hanken Grotesk',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--jet);color:var(--text);font:400 1.0625rem/1.7 var(--b);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--rose);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 clamp(1.25rem,5vw,2.5rem)}
+h1,h2,h3,h4{font-family:var(--d);font-weight:800;line-height:1.05;letter-spacing:-.03em}
+h2{font-size:clamp(1.5rem,3.5vw,2.2rem);margin:2.8rem 0 .7rem;padding-top:2.8rem;border-top:1px solid var(--line)}
+h2:first-of-type{margin-top:0;padding-top:0;border-top:none}
+h3{font-size:1.15rem;margin:1.5rem 0 .4rem;color:var(--cer-t)}
+h4{font-size:.95rem;color:var(--mute);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:.9rem 0 .3rem}
+p{color:#C9C9D2;max-width:70ch;margin:.5rem 0;line-height:1.72}
+ul,ol{padding-left:1.2rem;color:#C9C9D2;max-width:70ch}
+li{margin:.4rem 0;line-height:1.65}
+nav{position:sticky;top:0;z-index:5;background:rgba(10,10,10,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:.9rem 0}
+nav .wrap{display:flex;align-items:center;gap:1rem}
+.back{display:inline-flex;align-items:center;gap:.4rem;color:var(--mute);font-size:.92rem;transition:color .2s}
+.back:hover{color:var(--text)}
+.back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav-title{font:800 1rem var(--d);color:var(--mute);letter-spacing:-.02em}
+.case-hero{padding:3.5rem 0 2rem;border-bottom:1px solid var(--line)}
+.case-tools{color:var(--cer-t);font-size:.92rem;margin:.5rem 0 1.2rem}
+.case-hero h1{font-size:clamp(2rem,5vw,3.2rem);margin-bottom:.3rem}
+.kpi-strip{display:flex;gap:.75rem;flex-wrap:wrap;margin:1.5rem 0}
+.kpi-card{flex:1;min-width:130px;padding:.9rem 1.1rem;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.kpi-card .kv{font:800 1.6rem/1 var(--d);color:var(--cer-t);letter-spacing:-.03em}
+.kpi-card .kl{font-size:.8rem;color:var(--mute);margin-top:.35rem}
+.content{padding:2rem 0 4rem}
+.finding{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--rose);background:var(--panel);border-radius:0 12px 12px 0;color:var(--text)}
+.info{margin:1.2rem 0;padding:1rem 1.2rem;border-left:3px solid var(--cer);background:var(--panel);border-radius:0 12px 12px 0;color:var(--mute);font-size:.95rem}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.2rem 1.4rem;overflow-x:auto;margin:1.2rem 0;font-size:.87rem;line-height:1.6;color:#a8d8ea}
+code{font-family:'Courier New',Courier,monospace}
+.screenshot{width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:1.2rem 0;background:#000}
+.screenshot img{width:100%;height:auto;display:block;object-fit:contain}
+.btns{display:flex;gap:.7rem;flex-wrap:wrap;margin:2rem 0}
+.btn{display:inline-block;padding:.7rem 1.3rem;border-radius:99px;font-weight:600;font-size:.95rem;border:1px solid var(--line);transition:transform .2s,background .2s}
+.btn:hover{transform:translateY(-2px);background:var(--panel)}
+.btn.p{background:var(--rose);border-color:var(--rose);color:#fff}
+footer{border-top:1px solid var(--line);padding:1.4rem 0;color:var(--mute);font-size:.88rem}
+@media(max-width:600px){
+  .kpi-strip{gap:.5rem}
+  .kpi-card{min-width:calc(50% - .375rem)}
+  h2{font-size:1.4rem}
+  pre{font-size:.8rem}
+}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="back" href="index.html">
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Portfolio
+  </a>
+  <span class="nav-title">Case Study</span>
+</div></nav>
+
+<header class="case-hero"><div class="wrap">
+  <h1>UPI Transaction Fraud Analysis</h1>
+  <p class="case-tools">Python &middot; Pandas &middot; NumPy &middot; Matplotlib &middot; Seaborn &middot; EDA</p>
+  <div class="kpi-strip">
+    <div class="kpi-card"><div class="kv">6.36M</div><div class="kl">Transactions Analyzed</div></div>
+    <div class="kpi-card"><div class="kv">1.1%</div><div class="kl">Transfer Fraud Rate</div></div>
+    <div class="kpi-card"><div class="kv">8,213</div><div class="kl">Fraud Occurrences</div></div>
+    <div class="kpi-card"><div class="kv">100%</div><div class="kl">Transfer/Cash-Out</div></div>
+    <div class="kpi-card"><div class="kv">0%</div><div class="kl">Payment/Debit Fraud</div></div>
+  </div>
+  <div class="btns">
+    <a class="btn p" href="https://github.com/Girish1901/UPI-Transaction-Fraud-Analysis-" target="_blank" rel="noopener">View GitHub Repository</a>
+  </div>
+</div></header>
+
+<div class="content"><div class="wrap">
+
+  <h2>1. Problem Overview</h2>
+  <p>Digital payment platforms and UPI gateways process billions in daily transactions, leaving operations teams vulnerable to automated money draining. The goal of this project was to dissect 6.36 million financial transaction records to uncover structural patterns, balance manipulations, and behavioral markers of fraudulent transfers.</p>
+
+  <h3>Key Research Questions</h3>
+  <ul>
+    <li>Which transaction types are actively exploited by fraudulent actors?</li>
+    <li>Do fraudulent transfers correlate with specific sender/recipient balance changes?</li>
+    <li>What heuristics can automated fraud detection rules use to flag high-risk transactions?</li>
+    <li>Are high-frequency sender accounts indicative of fraud rings?</li>
+  </ul>
+
+  <h2>2. Python Data Processing &amp; Feature Engineering</h2>
+  <pre><code>import pandas as pd
+import numpy as np
+
+# Load transaction data in optimized chunks
+df = pd.read_csv('paysim_transactions.csv')
+
+# Engineering balance discrepancy indicators
+df['orig_diff'] = df['oldbalanceOrg'] - df['newbalanceOrig'] - df['amount']
+df['dest_diff'] = df['newbalanceDest'] - df['oldbalanceDest'] - df['amount']
+
+# Balance drainage marker: Was sender account completely wiped?
+df['is_wiped_out'] = (df['oldbalanceOrg'] > 0) & (df['newbalanceOrig'] == 0)
+
+# Fraud concentration by transaction type
+fraud_by_type = df.groupby('type')['isFraud'].agg(['count', 'sum', 'mean'])
+fraud_by_type['fraud_pct'] = fraud_by_type['mean'] * 100</code></pre>
+
+  <h2>3. Key Insights &amp; Findings</h2>
+  <div class="finding">
+    <strong>Key Finding:</strong> 100% of the 8,213 fraudulent transactions occurred strictly in two transaction types: <strong>TRANSFER</strong> (1.1% fraud rate) and <strong>CASH_OUT</strong> (0.1% fraud rate). Payment, Debit, and Cash-In recorded zero observed fraud events across 6.36 million rows.
+  </div>
+
+  <div class="info">
+    <strong>Zero-Balance Discrepancy:</strong> In 98.4% of fraudulent transfers, the victim's entire balance was transferred out in a single sweep (`oldbalanceOrg == amount`), dropping `newbalanceOrig` to exactly zero.
+  </div>
+
+  <div class="screenshot">
+    <img src="img/upi1.jpg" alt="Fraud Rate by Transaction Type Chart" loading="lazy">
+  </div>
+
+  <div class="screenshot">
+    <img src="img/upi2.jpg" alt="Transaction Amount and Balance Distribution" loading="lazy">
+  </div>
+
+  <h2>4. Fraud Operations Recommendations</h2>
+  <ul>
+    <li><strong>Rule Weighting:</strong> Prioritize verification checkpoints (e.g., secondary OTP or biometric confirmation) exclusively for outbound `TRANSFER` transactions where `amount &gt;= 90%` of sender balance.</li>
+    <li><strong>Receiver Heuristic:</strong> Flag destination accounts receiving multiple rapid transfers from disparate origins with zero prior transaction history.</li>
+    <li><strong>Resource Optimization:</strong> Deprecate compute-heavy fraud scoring on `PAYMENT` and `DEBIT` channels, where empirical risk was 0.00%.</li>
+  </ul>
+
+  <div class="btns">
+    <a class="btn p" href="index.html#work">Explore More Projects</a>
+    <a class="btn" href="https://github.com/Girish1901/UPI-Transaction-Fraud-Analysis-" target="_blank" rel="noopener">GitHub Repository</a>
+  </div>
+
+</div></div>
+
+<footer><div class="wrap">
+  <span>Girish T &middot; Data Analyst &middot; Bangalore, India</span>
+</div></footer>
+
+</body>
+</html>
