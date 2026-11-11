@@ -81,17 +81,18 @@ h1 span{display:block;font-size:.75em;color:transparent;-webkit-text-stroke:1.85
 .stages span.on:last-child{border-color:var(--rose);background:rgba(255,42,138,.16)}
 
 /* Stack layers */
-.layers{display:grid;gap:.9rem;margin-top:2.5rem}
-.layer{position:relative;overflow:hidden;display:grid;grid-template-columns:220px 1fr;gap:1.5rem;padding:1.6rem;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
-.layer::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--c),transparent 70%);opacity:.18;transform:scaleX(0);transform-origin:left}
+.layers{display:grid;gap:1rem;margin-top:2.5rem}
+.layer{position:relative;overflow:hidden;display:grid;grid-template-columns:240px 1fr;gap:2rem;padding:1.6rem 2rem;border:1px solid var(--line);border-radius:18px;background:var(--panel);align-items:center}
+.layer::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--c),transparent 65%);opacity:.18;transform:scaleX(0);transform-origin:left}
 .layer.in::before{transform:scaleX(1);transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
-.layer>*{position:relative}.layer h3{font-size:1.7rem}.layer small{display:block;color:var(--mute);font:500 .9rem var(--b);letter-spacing:0;margin-top:.4rem;line-height:1.4}
-.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
-.chips li{list-style:none;border:1px solid var(--line);background:var(--jet);border-radius:99px;padding:.25rem .8rem;font-size:.92rem}
-.curr-learn{margin-top:1.8rem;padding:1.1rem 1.5rem;border:1px solid var(--line);border-radius:14px;background:var(--panel);display:flex;gap:1.2rem;align-items:flex-start;flex-wrap:wrap}
-.curr-learn-label{font:600 .76rem var(--b);letter-spacing:.07em;text-transform:uppercase;color:var(--mute);padding-top:.2rem;white-space:nowrap}
-.curr-learn-chips{display:flex;flex-wrap:wrap;gap:.4rem}
-.curr-learn-chips span{border:1px dashed var(--line);border-radius:99px;padding:.2rem .75rem;font-size:.88rem;color:var(--mute)}
+.layer>*{position:relative}.layer h3{font-size:1.75rem}.layer small{display:block;color:var(--mute);font:500 .92rem var(--b);letter-spacing:0;margin-top:.45rem;line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:.6rem;margin:0;padding:0;list-style:none;align-items:center;align-content:center}
+.chips li{list-style:none;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;border:1px solid var(--line);background:#0A0A0A;border-radius:99px;padding:.4rem 1rem;font-size:.9rem;font-weight:500;color:var(--text);line-height:1.3;box-shadow:0 2px 8px rgba(0,0,0,.35);transition:border-color .2s,background .2s,transform .2s}
+.chips li:hover{border-color:var(--cer-t);background:#14141a;transform:translateY(-1px)}
+.curr-learn{margin-top:1.8rem;padding:1.2rem 1.8rem;border:1px solid var(--line);border-radius:16px;background:var(--panel);display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap}
+.curr-learn-label{font:600 .78rem var(--b);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+.curr-learn-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:0;padding:0}
+.curr-learn-chips span{display:inline-flex;align-items:center;white-space:nowrap;border:1px dashed var(--line);border-radius:99px;padding:.32rem .9rem;font-size:.88rem;color:var(--mute);background:#0A0A0A}
 
 /* Projects */
 .proj{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:2.5rem;padding:2.5rem 0;border-top:1px solid var(--line)}
@@ -134,7 +135,7 @@ footer{border-top:1px solid var(--line);padding:1.6rem 0;color:var(--mute);font-
   .about-grid{grid-template-columns:1fr;gap:2.2rem}
   .about-photo-wrap{max-width:260px;margin:0 auto}
   .proj,.layer{grid-template-columns:minmax(0,1fr)}
-  .proj{gap:1.5rem}.layer{gap:.8rem}
+  .proj{gap:1.5rem}.layer{gap:1.2rem;padding:1.4rem}
   .proj>*,.layer>*{min-width:0}
 }
 @media(max-width:600px){
@@ -190,14 +191,14 @@ footer{border-top:1px solid var(--line);padding:1.6rem 0;color:var(--mute);font-
 <header class="hero" id="top"><div class="wrap">
   <div>
     <div class="profile-pill">
-      <img src="img/profile.jpg" alt="Girish T">
+      <img id="pillAvatar" src="img/profile.jpg" alt="Girish T">
       <span class="status-text"><i class="live-dot"></i> <strong>Girish T</strong> &middot; Available for Data Analyst Roles &middot; Bangalore</span>
     </div>
     <h1 id="h1"></h1>
     <p id="sum"></p>
     <div class="btns">
       <a class="btn p" href="#work">Explore My Projects</a>
-      <a class="btn" href="Girish_T_Resume.pdf" target="_blank" rel="noopener">View Resume</a>
+      <a class="btn" id="heroResume" href="Girish_T_Resume.pdf" target="_blank" rel="noopener">View Resume</a>
     </div>
     <div class="hero-skills" aria-label="Core skills">
       <span>SQL</span><span>Python</span><span>Power BI</span><span>DAX</span><span>Data Analysis</span>
@@ -214,7 +215,7 @@ footer{border-top:1px solid var(--line);padding:1.6rem 0;color:var(--mute);font-
   <div class="about-grid">
     <div class="about-photo-wrap">
       <div class="photo-frame">
-        <img src="img/profile.jpg" alt="Girish T">
+        <img id="aboutAvatar" src="img/profile.jpg" alt="Girish T">
         <div class="photo-badge">
           <span class="live-dot"></span> Available for Analyst Roles
         </div>
@@ -371,6 +372,12 @@ function renderAll(){
   $('stack').hidden=!!C.hide.stack;$('nS').hidden=!!C.hide.stack;
   $('work').hidden=!!C.hide.work;$('nW').hidden=!!C.hide.work;
 
+  /* Dynamic Avatar / Profile Image from cloud or local fallback */
+  const avatarUrl = p.avatarUrl || 'img/profile.jpg';
+  const pillAv = $('pillAvatar'); if (pillAv) { pillAv.src = avatarUrl; pillAv.onerror = () => { pillAv.src = 'img/profile.jpg'; }; }
+  const abAv = $('aboutAvatar'); if (abAv) { abAv.src = avatarUrl; abAv.onerror = () => { abAv.src = 'img/profile.jpg'; }; }
+  const hrResume = $('heroResume'); if (hrResume && p.resumeUrl) hrResume.href = p.resumeUrl;
+
   /* Skill layers */
   const lay=$('layers');lay.replaceChildren();
   C.skills.forEach(g=>{const d=el('div','layer'),h=el('div');
@@ -414,7 +421,9 @@ function renderAll(){
     if(q.businessValue)R.append(el('p','biz-val',q.businessValue));
     /* Images */
     const imgs=(q.images||[]).filter(i=>safeImg(i.src)),sh=el('div','shots');let mb;
-    imgs.forEach((g,i)=>{const b=el('button',i?'':'main'),im=new Image();im.src=g.src;im.alt=g.alt||'';im.loading='lazy';b.append(im);b.setAttribute('aria-label','Enlarge: '+(g.alt||q.title));
+    imgs.forEach((g,i)=>{const b=el('button',i?'':'main'),im=new Image();im.src=g.src;im.alt=g.alt||'';im.loading='lazy';
+      im.onerror=()=>{try{const raw=g.src.split('?')[0];const fn=decodeURIComponent(raw).split('/').pop();if(fn&&!im.src.endsWith('/'+fn))im.src='img/'+fn}catch(e){}};
+      b.append(im);b.setAttribute('aria-label','Enlarge: '+(g.alt||q.title));
       b.onclick=()=>{cur=imgs.map(x=>[x.src,x.alt||'']);ci=i;show();lb.showModal()};if(i)sh.append(b);else mb=b});
     if(mb)R.append(mb);R.append(sh);
     /* Buttons */
@@ -457,10 +466,30 @@ function triggerAdmin(){
 const sig=$('sig');if(sig)sig.onclick=triggerAdmin;
 const foot=document.querySelector('footer');if(foot)foot.onclick=triggerAdmin;
 
-/* /api/content — fetches and merges server updates */
+/* Firebase Realtime Cloud Content Integration */
+function initFirebaseContent() {
+  if (window.FB && window.FB.listenContent) {
+    window.FB.listenContent((cloudData) => {
+      if (cloudData && Object.keys(cloudData).length > 0) {
+        const m = merge(cloudData);
+        if (JSON.stringify(m) !== JSON.stringify(C)) {
+          C = m;
+          renderAll();
+        }
+      }
+    });
+  } else {
+    // Retry once module loads
+    setTimeout(initFirebaseContent, 300);
+  }
+}
+initFirebaseContent();
+
+/* Fallback server /api/content fetch (if running via express/node) */
 fetch('/api/content',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
   if(j&&Object.keys(j).length>0){const m=merge(j);if(JSON.stringify(m)!==JSON.stringify(C)){C=m;renderAll()}}
 }).catch(()=>{});
 </script>
+<script type="module" src="firebase-config.js"></script>
 </body>
 </html>

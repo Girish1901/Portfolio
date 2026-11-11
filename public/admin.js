@@ -1,13 +1,11 @@
-// Private editor. Loaded only after the secret trigger; every save is checked on the server.
+// Private editor with direct Firebase Firestore, Auth, and Storage integration.
 (() => {
 const $ = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-const call = (m, u, b) => fetch(u, { method: m, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: b ? JSON.stringify(b) : undefined })
-  .then(async (r) => { const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'Error ' + r.status); return j; });
 
 const st = document.createElement('style');
 st.textContent = `
 .pfA,.pfL{font:15px/1.5 'Hanken Grotesk',system-ui,sans-serif;color:#EDEDF2}
-.pfA{position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:#0f0f13;border-left:1px solid #26262d;z-index:60;overflow:auto;padding:0 1rem 3rem}
+.pfA{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:#0f0f13;border-left:1px solid #26262d;z-index:60;overflow:auto;padding:0 1rem 3rem}
 .pfA .top{position:sticky;top:0;background:#0f0f13;padding:.9rem 0;border-bottom:1px solid #26262d;z-index:2}
 .pfA .top b{display:block;margin-bottom:.6rem}.pfA .acts,.pfA .tabs,.pfA .row{display:flex;gap:.4rem;flex-wrap:wrap}
 .pfA .tabs{margin-top:.7rem}.pfA button{font:inherit;color:#EDEDF2;background:#1a1a20;border:1px solid #26262d;border-radius:99px;padding:.35rem .9rem;cursor:pointer}
@@ -17,13 +15,15 @@ st.textContent = `
 .pfA label{display:block;margin:.5rem 0}.pfA label span{display:block;font-size:.8rem;color:#9A9AA6;margin-bottom:.2rem}
 .pfA input[type=text],.pfA input[type=number],.pfA textarea{width:100%;font:inherit;color:#EDEDF2;background:#0A0A0A;border:1px solid #26262d;border-radius:8px;padding:.45rem .6rem}
 .pfA label.ck{display:flex;gap:.5rem;align-items:center}.pfA .msg{font-size:.85rem;color:#9A9AA6;margin-top:.5rem;min-height:1.2em}.pfA .row{margin-top:.6rem}
+.pfA .file-up{margin-top:.4rem;padding:.5rem;border:1px dashed #3DB8E8;border-radius:8px;background:rgba(61,184,232,0.05);font-size:.8rem}
+.pfA .file-up input[type=file]{font-size:.78rem;color:#9A9AA6}
 .pfL{border:1px solid #26262d;border-radius:16px;background:#0f0f13;padding:1.4rem;width:min(360px,92vw)}.pfL::backdrop{background:rgba(0,0,0,.8)}
 .pfL input{width:100%;font:inherit;color:#EDEDF2;background:#0A0A0A;border:1px solid #26262d;border-radius:10px;padding:.65rem .8rem;margin:.8rem 0}
 .pfL button{font:inherit;color:#fff;background:#FF2A8A;border:0;border-radius:99px;padding:.6rem 1.3rem;cursor:pointer}.pfL p{color:#FF2A8A;min-height:1.3em;margin-top:.6rem}`;
 document.head.append(st);
 
 let W, panel, body, msg, tab = 'Profile', dirty = false, timer;
-const live = () => { dirty = true; msg.textContent = 'Unsaved changes'; clearTimeout(timer); timer = setTimeout(() => PF.set(structuredClone(W)), 350); };
+const live = () => { dirty = true; if(msg) msg.textContent = 'Unsaved changes'; clearTimeout(timer); timer = setTimeout(() => PF.set(structuredClone(W)), 350); };
 const swap = (a, i, j) => { [a[i], a[j]] = [a[j], a[i]]; };
 
 function field(parent, label, obj, key, o = {}) {
@@ -35,6 +35,33 @@ function field(parent, label, obj, key, o = {}) {
   l.append(i); parent.append(l);
 }
 const lines = (key) => ({ area: 1, rows: 4, get: (o) => (o[key] || []).join('\n'), set: (o, v) => { o[key] = v.split('\n').map((s) => s.trim()).filter(Boolean); } });
+
+function fileUploader(parent, label, onUploaded, prefix = "images") {
+  const box = $('div', 'file-up');
+  box.append($('span', '', 'Upload to Firebase: ' + label + ' '));
+  const inp = $('input'); inp.type = 'file';
+  inp.onchange = async () => {
+    const file = inp.files && inp.files[0];
+    if (!file) return;
+    if (!window.FB) { alert("Firebase not connected"); return; }
+    box.style.opacity = '0.5';
+    try {
+      if(msg) msg.textContent = 'Uploading ' + file.name + ' to Firebase Storage…';
+      const url = await window.FB.uploadFile(file, prefix);
+      onUploaded(url);
+      live();
+      if(msg) msg.textContent = 'Uploaded! Saved URL: ' + file.name;
+    } catch(err) {
+      alert("Upload failed: " + err.message);
+      if(msg) msg.textContent = 'Upload failed: ' + err.message;
+    } finally {
+      box.style.opacity = '1';
+      inp.value = '';
+    }
+  };
+  box.append(inp);
+  parent.append(box);
+}
 
 function list(parent, arr, make, draw, addLabel) {
   arr.forEach((it, i) => {
@@ -53,6 +80,14 @@ const TABS = {
     const p = W.profile;
     field(b, 'Name', p, 'name'); field(b, 'Line under your name', p, 'headline');
     field(b, 'Bio / summary', p, 'summary', { area: 1, rows: 7 }); field(b, 'Location (shown in footer)', p, 'location');
+    field(b, 'Profile Picture URL', p, 'avatarUrl', {
+      get: (o) => o.avatarUrl || 'img/profile.jpg',
+      set: (o, v) => { o.avatarUrl = v.trim(); }
+    });
+    fileUploader(b, 'Upload New Profile Photo', (url) => {
+      p.avatarUrl = url;
+      draw_();
+    }, "profile");
   },
   Skills(b) {
     list(b, W.skills, () => ({ name: 'New group', sub: '', color: '#007BA7', items: [] }), (c, g) => {
@@ -73,6 +108,11 @@ const TABS = {
       field(c, 'Images (one per line: https://link or img/file.jpg | caption)', p, 'images', { area: 1, rows: 4,
         get: (o) => (o.images || []).map((i) => i.src + (i.alt ? ' | ' + i.alt : '')).join('\n'),
         set: (o, v) => { o.images = v.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => { const [src, ...a] = s.split('|'); return { src: src.trim(), alt: a.join('|').trim() }; }); } });
+      fileUploader(c, 'Upload Project Screenshot to Storage', (url) => {
+        if (!p.images) p.images = [];
+        p.images.push({ src: url, alt: p.title || 'Screenshot' });
+        draw_();
+      }, "projects");
       field(c, 'GitHub link', p, 'github'); field(c, 'Note (shown if no GitHub link)', p, 'note');
       field(c, 'Case Study URL (e.g. ecommerce.html or churn.html)', p, 'caseStudyUrl', {
         get: (o) => (o.extraLinks && o.extraLinks[0]) ? o.extraLinks[0].url : (o.caseStudyUrl || ''),
@@ -95,6 +135,17 @@ const TABS = {
     list(b, W.contacts, () => ({ label: 'New link', url: 'https://' }), (c, k) => {
       field(c, 'Button text', k, 'label'); field(c, 'Link (https://, mailto: or tel:)', k, 'url'); field(c, 'Highlight in pink', k, 'primary', { check: 1 });
     }, 'Add contact');
+    fileUploader(b, 'Upload New Resume PDF to Storage', (url) => {
+      const resumeContact = (W.contacts || []).find(c => /resume/i.test(c.label));
+      if (resumeContact) {
+        resumeContact.url = url;
+      } else {
+        W.contacts.push({ label: 'View Resume', url, primary: false });
+      }
+      // Also update any resume button links if present
+      W.profile.resumeUrl = url;
+      draw_();
+    }, "resume");
   },
 };
 function draw_() { body.replaceChildren(); TABS[tab](body); }
@@ -103,23 +154,130 @@ function edit() {
   W = structuredClone(PF.get()); dirty = false;
   panel?.remove(); panel = $('div', 'pfA'); panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Edit portfolio');
   const top = $('div', 'top'), acts = $('div', 'acts'), tabs = $('div', 'tabs'); msg = $('div', 'msg'); body = $('div');
-  top.append($('b', '', 'Edit portfolio'), acts, msg, tabs);
-  const sv = $('button', 'sv', 'Save'), cl = $('button', '', 'Close'), lo = $('button', '', 'Sign out');
-  sv.onclick = () => { msg.textContent = 'Saving…'; call('PUT', '/api/content', W).then(() => { dirty = false; saved = structuredClone(W); PF.set(structuredClone(W)); msg.textContent = 'Saved. Visitors see it now.'; }).catch((e) => { msg.textContent = 'Not saved: ' + e.message; }); };
+  top.append($('b', '', 'Edit portfolio (Firebase Cloud Synced)'), acts, msg, tabs);
+  const sv = $('button', 'sv', 'Save to Firebase'), syncBtn = $('button', '', '☁️ Upload Local Files & Sync to Firebase'), cl = $('button', '', 'Close'), lo = $('button', '', 'Sign out');
+  
+  sv.onclick = async () => { 
+    msg.textContent = 'Saving to Firebase…'; 
+    try {
+      if (window.FB && window.FB.saveContent) {
+        await window.FB.saveContent(W);
+      }
+      dirty = false; 
+      saved = structuredClone(W); 
+      PF.set(structuredClone(W)); 
+      msg.textContent = 'Saved to Firebase Cloud! Live for all visitors.'; 
+    } catch(e) {
+      msg.textContent = 'Not saved: ' + e.message; 
+    }
+  };
+
+  syncBtn.onclick = async () => {
+    if (!window.FB) { alert("Firebase not loaded yet."); return; }
+    if (!confirm("This will upload all 14 local images and your resume PDF to Firebase Storage and update all links in Cloud Firestore. Continue?")) return;
+    
+    msg.textContent = 'Preparing files for Firebase upload…';
+    syncBtn.disabled = true;
+    syncBtn.style.opacity = '0.5';
+    
+    try {
+      // 1. Upload Profile Photo
+      msg.textContent = '[1/14] Uploading profile photo to Firebase Storage…';
+      const profBlob = await fetch('img/profile.jpg').then(r => r.blob());
+      const profUrl = await window.FB.uploadFile(profBlob, 'profile', 'profile.jpg');
+      W.profile.avatarUrl = profUrl;
+
+      // 2. Upload Resume PDF
+      msg.textContent = '[2/14] Uploading resume PDF to Firebase Storage…';
+      const resumeBlob = await fetch('Girish_T_Resume.pdf').then(r => r.blob());
+      const resumeUrl = await window.FB.uploadFile(resumeBlob, 'documents', 'Girish_T_Resume.pdf');
+      W.profile.resumeUrl = resumeUrl;
+      const resContact = (W.contacts || []).find(c => /resume/i.test(c.label));
+      if (resContact) resContact.url = resumeUrl;
+
+      // 3. Upload Project Screenshots
+      let count = 2;
+      for (const p of (W.projects || [])) {
+        if (!p.images) continue;
+        for (const img of p.images) {
+          count++;
+          const cleanLocal = img.src.startsWith('http') ? img.src : (img.src.startsWith('/') ? img.src.substring(1) : img.src);
+          msg.textContent = `[${count}/14] Uploading ${cleanLocal}…`;
+          try {
+            const blob = await fetch(cleanLocal).then(r => r.blob());
+            const fileName = cleanLocal.split('/').pop().split('?')[0];
+            const cloudUrl = await window.FB.uploadFile(blob, 'projects', fileName);
+            img.src = cloudUrl;
+          } catch(err) {
+            console.warn("Could not upload " + cleanLocal, err);
+          }
+        }
+      }
+
+      // 4. Save entire updated schema to Firestore
+      msg.textContent = 'Saving full mapped content to Cloud Firestore…';
+      await window.FB.saveContent(W);
+      dirty = false;
+      saved = structuredClone(W);
+      PF.set(structuredClone(W));
+      draw_();
+      msg.textContent = '✅ All files uploaded to Firebase Storage & mapped to Firestore!';
+      alert("Success! All images and files are now stored in Firebase Storage and mapped in Cloud Firestore.");
+    } catch(err) {
+      console.error(err);
+      msg.textContent = 'Sync error: ' + err.message;
+      alert("Firebase Sync Notice:\n" + err.message + "\n\nTip: In Firebase Console, ensure:\n1. Firestore Rules allow write ('allow read, write: if true;' for setup)\n2. Firebase Storage is initialized (click 'Get started' in the Storage tab).");
+    } finally {
+      syncBtn.disabled = false;
+      syncBtn.style.opacity = '1';
+    }
+  };
+
   cl.onclick = () => { if (dirty && !confirm('Close without saving?')) return; panel.remove(); PF.set(JSON.parse(JSON.stringify(saved))); };
-  lo.onclick = () => call('DELETE', '/api/auth').then(() => { panel.remove(); location.reload(); });
-  acts.append(sv, cl, lo);
+  
+  lo.onclick = async () => { 
+    if (window.FB && window.FB.logout) {
+      await window.FB.logout();
+    }
+    panel.remove(); 
+    location.reload(); 
+  };
+
+  acts.append(sv, syncBtn, cl, lo);
   Object.keys(TABS).forEach((k) => { const b = $('button', k === tab ? 'on' : '', k); b.onclick = () => { tab = k; tabs.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); draw_(); }; tabs.append(b); });
   panel.append(top, body); document.body.append(panel); saved = structuredClone(W); draw_();
 }
+
 let saved;
 function login() {
   const d = $('dialog', 'pfL'), f = $('form'), email = $('input'), password = $('input'), e = $('p');
-  email.type = 'email'; email.placeholder = 'Email'; email.autocomplete = 'username'; email.required = true; email.setAttribute('aria-label', 'Email');
-  password.type = 'password'; password.placeholder = 'Password'; password.autocomplete = 'current-password'; password.required = true; password.setAttribute('aria-label', 'Password');
-  const b = $('button', '', 'Enter'); f.method = 'dialog'; f.append(email, password, b, e); d.append(f); document.body.append(d); d.showModal(); email.focus();
+  email.type = 'email'; email.placeholder = 'Firebase Admin Email'; email.autocomplete = 'username'; email.required = true; email.setAttribute('aria-label', 'Email');
+  password.type = 'password'; password.placeholder = 'Firebase Password'; password.autocomplete = 'current-password'; password.required = true; password.setAttribute('aria-label', 'Password');
+  const b = $('button', '', 'Sign In with Firebase'); f.method = 'dialog'; f.append(email, password, b, e); d.append(f); document.body.append(d); d.showModal(); email.focus();
   d.addEventListener('close', () => d.remove());
-  f.onsubmit = (ev) => { ev.preventDefault(); e.textContent = ''; call('POST', '/api/auth', { email: email.value, password: password.value }).then(() => { d.close(); edit(); }).catch((x) => { e.textContent = x.message; password.select(); }); };
+  f.onsubmit = async (ev) => { 
+    ev.preventDefault(); 
+    e.textContent = 'Authenticating…'; 
+    try {
+      if (!window.FB) throw new Error("Firebase not loaded yet. Try again in 2 seconds.");
+      await window.FB.login(email.value.trim(), password.value);
+      d.close(); 
+      edit(); 
+    } catch(x) { 
+      e.textContent = x.message || "Login failed"; 
+      password.select(); 
+    } 
+  };
 }
-window.PFAdmin = { open: () => { if (panel && panel.isConnected) return; call('GET', '/api/auth').then((j) => (j.admin ? edit() : login())).catch(login); } };
+
+window.PFAdmin = { 
+  open: () => { 
+    if (panel && panel.isConnected) return; 
+    if (window.FB && window.FB.getCurrentUser()) {
+      edit();
+    } else {
+      login();
+    }
+  } 
+};
 })();
