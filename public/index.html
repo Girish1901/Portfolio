@@ -275,7 +275,7 @@ fetch('/health',{cache:'no-store'}).then(r=>r.json()).then(j=>{
 
 /* ---- Content defaults ---- */
 const DEFAULT={
-profile:{name:'Girish T',headline:'Turning raw data into business decisions.',summary:'Data Analyst with a Bachelor of Engineering in Computer Science and Data Science and project experience in SQL, Power BI, DAX, and Python, skilled in data extraction, data cleaning, data validation, KPI development, and dashboard reporting. Analyzed sales, customer, and transaction datasets of up to 367K+ records, building SQL analytical datasets with CTEs, joins, and window functions and interactive Power BI dashboards. Strong foundation in data modelling, star schema design, exploratory data analysis, customer and sales analytics, and Agile/Scrum, with a focus on turning data into actionable business insights.',location:'Bangalore, India'},
+profile:{name:'Girish T',headline:'Turning raw data into business decisions.',summary:'Data Analyst with a Bachelor of Engineering in Computer Science and Data Science and project experience in SQL, Power BI, DAX, and Python, skilled in data extraction, data cleaning, data validation, KPI development, and dashboard reporting. Analyzed sales, customer, and transaction datasets of up to 367K+ records, building SQL analytical datasets with CTEs, joins, and window functions and interactive Power BI dashboards. Strong foundation in data modelling, star schema design, exploratory data analysis, customer and sales analytics, and Agile/Scrum, with a focus on turning data into actionable business insights.',location:'Bangalore, India',avatarUrl:'img/profile.jpg',resumeUrl:'Girish_T_Resume.pdf'},
 texts:{stackTitle:'My Stack, From Data to Decisions',stackLede:'I work across the analytics workflow\u2014from querying raw data and validating its quality to modelling data and building business intelligence dashboards.',stackLearning:'Microsoft Fabric \u00b7 PySpark \u00b7 Data Engineering',workTitle:'Projects',contactTitle:'Let\u2019s talk data.',contactLede:'Computer Science graduate specialising in Data Science, based in Bangalore, India. Interested in entry-level Data Analyst and Business Intelligence opportunities.\n\nI enjoy using SQL, Python, and Power BI to turn complex datasets into clear, useful business insights.\n\nHave an opportunity or a data problem to discuss? Let\u2019s connect.'},
 hide:{stack:false,work:false},
 skills:[
@@ -352,8 +352,8 @@ const merge=j=>{
 };
 
 const $=id=>document.getElementById(id),el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
-const safeUrl=u=>{try{const x=new URL(u,location.href);return/^(https?:|mailto:|tel:)$/.test(x.protocol)?u:null}catch{return null}};
-const safeImg=u=>/^(https:\/\/|http:\/\/|img\/)/.test(u||'')?u:'';
+const safeUrl=u=>{if(!u||typeof u!=='string')return null;const s=u.trim();if(s.startsWith('javascript:'))return null;return s;};
+const safeImg=u=>{if(!u||typeof u!=='string')return '';const s=u.trim();if(s.startsWith('javascript:'))return '';return s;};
 if(!window.anime)window.anime=o=>{const t=o.targets;if(t&&'v' in t){t.v=o.v;o.update&&o.update()}else if(t&&t.style&&o.strokeDashoffset!==undefined)t.style.strokeDashoffset=o.strokeDashoffset};
 const io=new IntersectionObserver(es=>es.forEach(en=>{if(!en.isIntersecting)return;io.unobserve(en.target);const t=en.target;
   if(t.classList.contains('layer'))t.classList.add('in');

@@ -1,11 +1,11 @@
-// Private editor with dedicated single-project management, Firebase Firestore, Auth, and Storage integration.
+// Private editor with dedicated single-project management, live image previews, multi-layer auto-saving, and Firebase integration.
 (() => {
 const $ = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
 
 const st = document.createElement('style');
 st.textContent = `
 .pfA,.pfL{font:15px/1.5 'Hanken Grotesk',system-ui,sans-serif;color:#EDEDF2}
-.pfA{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:#0f0f13;border-left:1px solid #26262d;z-index:60;overflow:auto;padding:0 1.2rem 3.5rem;box-shadow:-8px 0 32px rgba(0,0,0,.6)}
+.pfA{position:fixed;top:0;right:0;bottom:0;width:min(540px,100vw);background:#0f0f13;border-left:1px solid #26262d;z-index:60;overflow:auto;padding:0 1.2rem 3.5rem;box-shadow:-8px 0 32px rgba(0,0,0,.6)}
 .pfA .top{position:sticky;top:0;background:#0f0f13;padding:1rem 0 .8rem;border-bottom:1px solid #26262d;z-index:10}
 .pfA .top b{display:block;margin-bottom:.5rem;font-size:1.05rem;color:#EDEDF2}
 .pfA .acts,.pfA .tabs,.pfA .row{display:flex;gap:.4rem;flex-wrap:wrap}
@@ -30,6 +30,12 @@ st.textContent = `
 .pfA .sec-divider{margin:1.4rem 0 .6rem;padding-top:1rem;border-top:1px solid #26262d;font-size:.9rem;color:#3DB8E8;display:flex;align-items:center;gap:.5rem}
 .pfA .file-up{margin-top:.6rem;padding:.7rem .9rem;border:1px dashed #3DB8E8;border-radius:10px;background:rgba(61,184,232,0.06);font-size:.85rem}
 .pfA .file-up input[type=file]{font-size:.8rem;color:#9A9AA6;margin-top:.3rem}
+.pfA .thumb-preview{display:flex;align-items:center;gap:1rem;margin:.6rem 0;padding:.6rem;background:#0A0A0A;border:1px solid #26262d;border-radius:10px}
+.pfA .thumb-preview img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid #3DB8E8}
+.pfA .img-card{display:flex;align-items:center;gap:.8rem;padding:.5rem;margin-top:.5rem;background:#0A0A0A;border:1px solid #26262d;border-radius:8px}
+.pfA .img-card img{width:64px;height:48px;object-fit:cover;border-radius:6px;border:1px solid #26262d}
+.pfA .img-card .img-meta{flex:1;min-width:0}
+.pfA .img-card input{font-size:.82rem;padding:.3rem .5rem}
 .pfL{border:1px solid #26262d;border-radius:16px;background:#0f0f13;padding:1.6rem;width:min(380px,92vw);box-shadow:0 12px 48px rgba(0,0,0,.8)}
 .pfL::backdrop{background:rgba(0,0,0,.85);backdrop-filter:blur(4px)}
 .pfL input{width:100%;font:inherit;color:#EDEDF2;background:#0A0A0A;border:1px solid #26262d;border-radius:10px;padding:.7rem .9rem;margin:.6rem 0}
@@ -42,14 +48,59 @@ document.head.append(st);
 let W, panel, body, msg, tab = 'Projects', dirty = false, timer, saved;
 window._activeProjectIdx = 0;
 
+// Read file as Base64 Data URL
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (e) => reject(e);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Resilient universal file uploader: Firebase Storage -> /api/upload -> Base64
+async function uploadAnyFile(file, prefix = "uploads", customName = null) {
+  const fileName = customName || file.name || ("file_" + Date.now());
+  
+  // 1. Try Firebase Storage
+  if (window.FB && window.FB.uploadFile) {
+    try {
+      const url = await window.FB.uploadFile(file, prefix, fileName);
+      return url;
+    } catch(err) {
+      console.warn("Firebase Storage upload skipped/failed:", err.message);
+    }
+  }
+
+  // 2. Try Server /api/upload (saves locally to public/img/...)
+  try {
+    const base64Data = await readFileAsDataUrl(file);
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: fileName, data: base64Data, prefix })
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.url) return json.url;
+    }
+  } catch(err) {
+    console.warn("Server /api/upload failed:", err.message);
+  }
+
+  // 3. Fallback: Return raw Data URL (guarantees image works anywhere instantly)
+  return await readFileAsDataUrl(file);
+}
+
 const live = () => { 
   dirty = true; 
-  if (msg) msg.textContent = '● Unsaved changes (auto-caching to browser)'; 
+  if (msg) msg.textContent = '● Changes detected — auto-saving to browser & disk…'; 
   clearTimeout(timer); 
   timer = setTimeout(() => {
     PF.set(structuredClone(W));
     try { localStorage.setItem('portfolio_content', JSON.stringify(W)); } catch(e){}
-  }, 350); 
+    saveAll(true);
+  }, 400); 
 };
 
 const swap = (a, i, j) => { [a[i], a[j]] = [a[j], a[i]]; };
@@ -89,7 +140,7 @@ const lines = (key) => ({
 function fileUploader(parent, label, onUploaded, prefix = "images") {
   const box = $('div', 'file-up');
   box.append($('b', '', label));
-  const hint = $('div', '', 'Select a local file to upload directly to Firebase Storage.');
+  const hint = $('div', '', 'Select an image or document from your device.');
   hint.style.fontSize = '.78rem';
   hint.style.color = '#9A9AA6';
   hint.style.marginBottom = '.4rem';
@@ -99,17 +150,17 @@ function fileUploader(parent, label, onUploaded, prefix = "images") {
   inp.onchange = async () => {
     const file = inp.files && inp.files[0];
     if (!file) return;
-    if (!window.FB) { alert("Firebase is not connected yet."); return; }
     box.style.opacity = '0.5';
     try {
-      if (msg) msg.textContent = 'Uploading ' + file.name + ' to Firebase Storage…';
-      const url = await window.FB.uploadFile(file, prefix);
-      onUploaded(url);
-      live();
-      if (msg) msg.textContent = '✅ Uploaded! Saved URL: ' + file.name;
+      if (msg) msg.textContent = 'Uploading ' + file.name + '…';
+      const url = await uploadAnyFile(file, prefix);
+      await onUploaded(url);
+      await saveAll();
+      if (msg) msg.textContent = '✅ Uploaded & saved: ' + file.name;
     } catch(err) {
-      alert("Upload failed: " + err.message + "\n\nTip: In Firebase Console -> Storage tab, ensure Storage is initialized.");
-      if (msg) msg.textContent = 'Upload failed: ' + err.message;
+      console.error(err);
+      alert("Upload notice: " + err.message);
+      if (msg) msg.textContent = 'Upload notice: ' + err.message;
     } finally {
       box.style.opacity = '1';
       inp.value = '';
@@ -132,8 +183,8 @@ function list(parent, arr, make, draw, addLabel) {
 }
 
 // Multi-layer resilient save
-async function saveAll() {
-  if (msg) msg.textContent = 'Saving across all persistence layers…';
+async function saveAll(silent = false) {
+  if (!silent && msg) msg.textContent = 'Saving across all persistence layers…';
   
   // 1. Browser localStorage (Guaranteed to persist across refresh)
   try {
@@ -161,7 +212,6 @@ async function saveAll() {
       fbOk = true;
     } catch(e) {
       fbErr = e.message;
-      console.warn("Firestore save notice:", e);
     }
   }
   
@@ -169,13 +219,14 @@ async function saveAll() {
   saved = structuredClone(W);
   PF.set(structuredClone(W));
   
-  if (fbOk) {
-    if (msg) msg.textContent = '✅ Saved permanently to Firebase Cloud, Local Disk & Browser!';
-  } else if (fbErr) {
-    if (msg) msg.textContent = '💾 Saved locally to Browser & Disk! (Cloud: ' + fbErr + ')';
-    alert("Saved permanently to your browser and local disk!\n\nNotice for Firebase Cloud:\n" + fbErr + "\n\n(Tip: In Firebase Console -> Firestore Database -> Rules, ensure 'allow read, write: if true;' is published).");
-  } else {
-    if (msg) msg.textContent = '💾 Saved permanently to Local Storage & Disk!';
+  if (!silent) {
+    if (fbOk) {
+      if (msg) msg.textContent = '✅ Saved permanently to Firebase Cloud, Local Disk & Browser!';
+    } else if (fbErr) {
+      if (msg) msg.textContent = '💾 Saved locally to Browser & Disk! (Cloud: ' + fbErr + ')';
+    } else {
+      if (msg) msg.textContent = '💾 Saved permanently to Local Storage & Disk!';
+    }
   }
 }
 
@@ -189,7 +240,7 @@ const TABS = {
     // Top selector bar with pills for individual projects
     const selWrap = $('div');
     selWrap.style.marginBottom = '1.2rem';
-    selWrap.append($('b', '', 'Select Single Project to Edit:'));
+    selWrap.append($('b', '', 'Select Project to Edit:'));
     
     const pTabs = $('div', 'tabs');
     pTabs.style.marginTop = '.4rem';
@@ -277,14 +328,14 @@ const TABS = {
     
     // Group 3: Case Study Deep-Dive
     const div3 = $('div', 'sec-divider'); div3.textContent = '3. Case Study Deep-Dive 🚀'; card.append(div3);
-    field(card, 'Case Study Page URL (e.g. ecommerce.html, churn.html, adidas.html, upi.html, cinema.html)', p, 'caseStudyUrl', {
+    field(card, 'Case Study Page URL (e.g. ecommerce.html, churn.html, or leave empty if none)', p, 'caseStudyUrl', {
       get: (o) => (o.extraLinks && o.extraLinks[0]) ? o.extraLinks[0].url : (o.caseStudyUrl || ''),
       set: (o, v) => {
         o.caseStudyUrl = v.trim();
         o.extraLinks = v.trim() ? [{ label: (o.extraLinks && o.extraLinks[0] && o.extraLinks[0].label) || 'View Full Case Study', url: v.trim(), primary: true }] : [];
       }
     });
-    field(card, 'Case Study Button Label', p, 'csLabel', {
+    field(card, 'Case Study Button Label (e.g. View Full Case Study)', p, 'csLabel', {
       get: (o) => (o.extraLinks && o.extraLinks[0]) ? o.extraLinks[0].label : 'View Full Case Study',
       set: (o, v) => {
         if (!o.extraLinks) o.extraLinks = [];
@@ -297,17 +348,64 @@ const TABS = {
     const div4 = $('div', 'sec-divider'); div4.textContent = '4. GitHub & Screenshots'; card.append(div4);
     field(card, 'GitHub Repository URL', p, 'github');
     field(card, 'Status Note (e.g. Published in Power BI Service)', p, 'note');
-    field(card, 'Screenshots (one per line: https://link or img/file.jpg | caption)', p, 'images', {
-      area: 1, rows: 4,
-      get: (o) => (o.images || []).map((i) => i.src + (i.alt ? ' | ' + i.alt : '')).join('\n'),
-      set: (o, v) => {
-        o.images = v.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => {
-          const [src, ...a] = s.split('|');
-          return { src: src.trim(), alt: a.join('|').trim() };
-        });
-      }
-    });
-    fileUploader(card, 'Upload Screenshot to Firebase Storage', (url) => {
+    
+    // Interactive Screenshot List
+    const shotLabel = $('b', '', 'Project Screenshots:');
+    card.append(shotLabel);
+    
+    const shotsWrap = $('div');
+    if (!p.images) p.images = [];
+    
+    if (p.images.length === 0) {
+      const emptyNote = $('p', '', 'No screenshots added yet. Upload one below.');
+      emptyNote.style.color = '#9A9AA6';
+      emptyNote.style.fontSize = '.85rem';
+      shotsWrap.append(emptyNote);
+    } else {
+      p.images.forEach((img, imIdx) => {
+        const item = $('div', 'img-card');
+        const thumb = $('img');
+        thumb.src = img.src;
+        thumb.onerror = () => { thumb.src = 'img/profile.jpg'; };
+        
+        const meta = $('div', 'img-meta');
+        const capInput = $('input');
+        capInput.type = 'text';
+        capInput.value = img.alt || '';
+        capInput.placeholder = 'Caption / Alt text';
+        capInput.oninput = () => {
+          img.alt = capInput.value;
+          live();
+        };
+        
+        const urlInput = $('input');
+        urlInput.type = 'text';
+        urlInput.value = img.src || '';
+        urlInput.placeholder = 'Image URL';
+        urlInput.style.marginTop = '.3rem';
+        urlInput.oninput = () => {
+          img.src = urlInput.value;
+          thumb.src = urlInput.value;
+          live();
+        };
+        meta.append(capInput, urlInput);
+        
+        const delBtn = $('button', 'sm', '🗑️');
+        delBtn.title = 'Remove this image';
+        delBtn.style.color = '#ff6b6b';
+        delBtn.onclick = () => {
+          p.images.splice(imIdx, 1);
+          live();
+          draw_();
+        };
+        
+        item.append(thumb, meta, delBtn);
+        shotsWrap.append(item);
+      });
+    }
+    card.append(shotsWrap);
+    
+    fileUploader(card, '➕ Upload Screenshot', (url) => {
       if (!p.images) p.images = [];
       p.images.push({ src: url, alt: p.title || 'Screenshot' });
       draw_();
@@ -365,14 +463,45 @@ const TABS = {
     field(b, 'Headline under your name', p, 'headline');
     field(b, 'Bio / About Me Summary', p, 'summary', { area: 1, rows: 7 });
     field(b, 'Location (shown in footer)', p, 'location');
-    field(b, 'Profile Picture URL', p, 'avatarUrl', {
+    
+    // Live profile picture thumbnail preview
+    const prevWrap = $('div', 'thumb-preview');
+    const avImg = $('img');
+    avImg.src = p.avatarUrl || 'img/profile.jpg';
+    avImg.onerror = () => { avImg.src = 'img/profile.jpg'; };
+    
+    const avMeta = $('div');
+    avMeta.append($('b', '', 'Current Profile Photo'));
+    const avSub = $('div', '', 'Preview of your live photo displayed on the homepage.');
+    avSub.style.fontSize = '.8rem';
+    avSub.style.color = '#9A9AA6';
+    avMeta.append(avSub);
+    prevWrap.append(avImg, avMeta);
+    b.append(prevWrap);
+    
+    field(b, 'Profile Picture URL or Path', p, 'avatarUrl', {
       get: (o) => o.avatarUrl || 'img/profile.jpg',
-      set: (o, v) => { o.avatarUrl = v.trim(); }
+      set: (o, v) => { 
+        o.avatarUrl = v.trim(); 
+        avImg.src = o.avatarUrl;
+      }
     });
-    fileUploader(b, 'Upload New Profile Photo to Firebase Storage', (url) => {
+    
+    fileUploader(b, '📸 Upload New Profile Photo', async (url) => {
       p.avatarUrl = url;
+      avImg.src = url;
       draw_();
     }, "profile");
+    
+    const resetAvBtn = $('button', 'sm', 'Reset to Default Photo (img/profile.jpg)');
+    resetAvBtn.style.marginTop = '.4rem';
+    resetAvBtn.onclick = () => {
+      p.avatarUrl = 'img/profile.jpg';
+      avImg.src = 'img/profile.jpg';
+      live();
+      draw_();
+    };
+    b.append(resetAvBtn);
   },
 
   Skills(b) {
@@ -402,7 +531,8 @@ const TABS = {
       field(c, 'Link (https://, mailto: or tel:)', k, 'url');
       field(c, 'Highlight in Pink Accent', k, 'primary', { check: 1 });
     }, 'Add Contact Link');
-    fileUploader(b, 'Upload New Resume PDF to Firebase Storage', (url) => {
+    
+    fileUploader(b, '📄 Upload New Resume PDF', (url) => {
       const resumeContact = (W.contacts || []).find(c => /resume/i.test(c.label));
       if (resumeContact) resumeContact.url = url;
       if (W.profile) W.profile.resumeUrl = url;
@@ -430,11 +560,10 @@ function edit() {
   msg = $('div', 'msg'); 
   body = $('div');
   
-  top.append($('b', '', 'Admin Portfolio Editor (Firebase & Disk Synced)'), acts, msg, tabs);
+  top.append($('b', '', 'Admin Portfolio Editor (Dynamic & Multi-Cloud Synced)'), acts, msg, tabs);
   
   const sv = $('button', 'sv', '💾 Save All Changes');
-  const seedBtn = $('button', 'seed-btn', '⚡ Push to Firebase (Create Collection)');
-  const syncBtn = $('button', '', '☁️ Upload Files to Storage');
+  const seedBtn = $('button', 'seed-btn', '⚡ Push to Firebase Firestore');
   const cl = $('button', '', 'Close');
   const lo = $('button', '', 'Sign Out');
   
@@ -456,63 +585,6 @@ function edit() {
     }
   };
 
-  syncBtn.onclick = async () => {
-    if (!window.FB) { alert("Firebase not loaded yet."); return; }
-    if (!confirm("This will upload all 14 local images and your resume PDF to Firebase Storage and update all links in Cloud Firestore. Continue?")) return;
-    
-    msg.textContent = 'Preparing files for Firebase upload…';
-    syncBtn.disabled = true;
-    syncBtn.style.opacity = '0.5';
-    
-    try {
-      // 1. Upload Profile Photo
-      msg.textContent = '[1/14] Uploading profile photo to Firebase Storage…';
-      const profBlob = await fetch('img/profile.jpg').then(r => r.blob());
-      const profUrl = await window.FB.uploadFile(profBlob, 'profile', 'profile.jpg');
-      W.profile.avatarUrl = profUrl;
-
-      // 2. Upload Resume PDF
-      msg.textContent = '[2/14] Uploading resume PDF to Firebase Storage…';
-      const resumeBlob = await fetch('Girish_T_Resume.pdf').then(r => r.blob());
-      const resumeUrl = await window.FB.uploadFile(resumeBlob, 'documents', 'Girish_T_Resume.pdf');
-      W.profile.resumeUrl = resumeUrl;
-      const resContact = (W.contacts || []).find(c => /resume/i.test(c.label));
-      if (resContact) resContact.url = resumeUrl;
-
-      // 3. Upload Project Screenshots
-      let count = 2;
-      for (const p of (W.projects || [])) {
-        if (!p.images) continue;
-        for (const img of p.images) {
-          count++;
-          const cleanLocal = img.src.startsWith('http') ? img.src : (img.src.startsWith('/') ? img.src.substring(1) : img.src);
-          msg.textContent = `[${count}/14] Uploading ${cleanLocal}…`;
-          try {
-            const blob = await fetch(cleanLocal).then(r => r.blob());
-            const fileName = cleanLocal.split('/').pop().split('?')[0];
-            const cloudUrl = await window.FB.uploadFile(blob, 'projects', fileName);
-            img.src = cloudUrl;
-          } catch(err) {
-            console.warn("Could not upload " + cleanLocal, err);
-          }
-        }
-      }
-
-      // 4. Save entire updated schema to Firestore & Local
-      await saveAll();
-      draw_();
-      msg.textContent = '✅ All files uploaded to Firebase Storage & mapped!';
-      alert("Success! All images and files are now stored in Firebase Storage and mapped in Cloud Firestore.");
-    } catch(err) {
-      console.error(err);
-      msg.textContent = 'Sync error: ' + err.message;
-      alert("Firebase Sync Notice:\n" + err.message + "\n\nTip: In Firebase Console, ensure:\n1. Firestore Rules allow write\n2. Firebase Storage is initialized (click 'Get started' in the Storage tab).");
-    } finally {
-      syncBtn.disabled = false;
-      syncBtn.style.opacity = '1';
-    }
-  };
-
   cl.onclick = () => { 
     if (dirty && !confirm('Close without saving?')) return; 
     panel.remove(); 
@@ -527,7 +599,7 @@ function edit() {
     location.reload(); 
   };
 
-  acts.append(sv, seedBtn, syncBtn, cl, lo);
+  acts.append(sv, seedBtn, cl, lo);
   
   Object.keys(TABS).forEach((k) => { 
     const b = $('button', k === tab ? 'on' : '', k); 
